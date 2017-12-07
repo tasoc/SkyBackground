@@ -53,9 +53,9 @@ if __name__ == '__main__':
 
     # Load file:
     ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
-    ffi = ffis[2]
-    sfile = glob.glob('../data/'+ffi+'/simulated/*.fits')[0]
-    bgfile = glob.glob('../data/'+ffi+'/backgrounds.fits')[0]
+    ffi_type = ffis[2]
+    sfile = glob.glob('../data/'+ffi_type+'/simulated/*.fits')[0]
+    bgfile = glob.glob('../data/'+ffi_type+'/backgrounds.fits')[0]
 
     try:
         hdulist = pyfits.open(sfile)
@@ -75,7 +75,7 @@ if __name__ == '__main__':
     fig, ax = plt.subplots()
     im = ax.imshow(np.log10(ffi),cmap='Blues_r', origin='lower')
     fig.colorbar(im,label=r'$log_{10}$(Flux)')
-    ax.set_title(ffi)
+    ax.set_title(ffi_type)
 
     fdiff, adiff = plt.subplots()
     diff = adiff.imshow(np.log10(est_bkg) - np.log10(ffi), origin='lower')
