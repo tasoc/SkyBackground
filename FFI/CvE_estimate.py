@@ -135,8 +135,8 @@ if __name__ == '__main__':
     #Load file:
     ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
     ffi_type = ffis[2]
-    sfile = glob.glob('../data/'+ffi_type+'/simulated/*.fits')[0]
-    bgfile = glob.glob('../data/'+ffi_type+'/backgrounds.fits')[0]
+    sfile = glob.glob('../../data/'+ffi_type+'/simulated/*.fits')[0]
+    bgfile = glob.glob('../../data/'+ffi_type+'/backgrounds.fits')[0]
 
     try:
         hdulist = pyfits.open(sfile)
