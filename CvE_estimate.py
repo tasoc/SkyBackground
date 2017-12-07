@@ -1,7 +1,9 @@
+#!/bin/env python
+# -*- coding: utf-8 -*-
+
 #AUTHORS:
 #T'DA1 | Carolina VAN ESSEN  | 2016
 #T'DA3 | Oliver James HALL | 2017
-
 
 import numpy as np
 import matplotlib.pylab as plt
@@ -20,14 +22,20 @@ to suit their needs.'''
 
 
 if __name__ == '__main__':
+    plt.close('all')
     ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
-    ffi = ffis[0]
+    ffi = ffis[2]
     sfile = glob.glob('../data/'+ffi+'/simulated/*.fits')[0]
+    bgfile = glob.glob('../data/'+ffi+'/backgrounds.fits')[0]
+
     plots_on = False
 
     '''Reading in data'''
     hdu_list = pyfits.open(sfile)
     image_data = hdu_list[0].data
+
+    bkg_list = pyfits.open(bgfile)
+    bkg = bkg_list[0].data
 
     '''Setting up image dimensions'''
     ndim = image_data.shape[0]
@@ -111,29 +119,35 @@ if __name__ == '__main__':
     fig, ax = plt.subplots()
     im = ax.imshow(np.log10(image_data),cmap='Blues_r', origin='lower')
     fig.colorbar(im,label=r'$log_{10}$(Flux)')
-    ax.set_xlabel('Bin')
-    ax.set_ylabel('Bin')
     ax.set_title(ffi)
 
-    fb, ab = plt.subplots(2)
-    bgy = ab[0].imshow(np.log10(image_data_smooth_11), cmap='Blues_r', origin = 'lower')
-    fb.colorbar(bgy,label=r'$log_{10}$(Flux)')
-    ab[0].set_xlabel('Bin')
-    ab[0].set_ylabel('Bin')
-    ab[0].set_title('Background evaluated in y direction')
+    if plots_on:
+        fb, ab = plt.subplots(2)
+        bgy = ab[0].imshow(np.log10(image_data_smooth_11), cmap='Blues_r', origin = 'lower')
+        fb.colorbar(bgy,ax=ab[0],label=r'$log_{10}$(Flux)')
+        ab[0].set_title('Background evaluated in y direction')
 
-    bgx = ab[1].imshow(np.log10(image_data_smooth_22), cmap='Blues_r', origin = 'lower')
-    fb[1].colorbar(bgx,label=r'$log_{10}$(Flux)')
-    ab[1].set_xlabel('Bin')
-    ab[1].set_ylabel('Bin')
-    ab[1].set_title('Background evaluated in x direction')
+        bgx = ab[1].imshow(np.log10(image_data_smooth_22), cmap='Blues_r', origin = 'lower')
+        fb.colorbar(bgx,ax=ab[1],label=r'$log_{10}$(Flux)')
+        ab[1].set_title('Background evaluated in x direction')
+        fb.tight_layout()
 
-    fbf, abf = plt.subplots()
-    bgf = abf.imshow(np.log10(final), cmap='Blues_r', origin='lower')
-    fbf.colorbar(bgf, label=r'$log_{10}$(Flux)')
-    abf.set_xlabel('Bin')
-    abf.set_ylabel('Bin')
-    abf.set_title('Background averaged across evaluations in x and y')
+        fbf, abf = plt.subplots()
+        bgf = abf.imshow(np.log10(final), cmap='Blues_r', origin='lower')
+        fbf.colorbar(bgf, label=r'$log_{10}$(Flux)')
+        abf.set_title('Background averaged across evaluations in x and y')
+
+        ftru, atru = plt.subplots()
+        btru = atru.imshow(np.log10(bkg), cmap='Blues_r', origin='lower')
+        ftru.colorbar(btru, label=r'$log_{10}$(Flux)')
+        atru.set_xlabel('Pixel #')
+        atru.set_ylabel('Pixel #')
+        atru.set_title('True background of simulated data')
+
+    fdiff, adiff = plt.subplots()
+    diff = adiff.imshow(np.log10(final) - np.log10(bkg), origin='lower')
+    fdiff.colorbar(diff, label='Estimated Bkg - True Bkg (both in log10 space)')
+    adiff.set_title('Estimated bkg - True bkg')
 
     plt.show('all')
     plt.close('all')
