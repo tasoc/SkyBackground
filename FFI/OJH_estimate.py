@@ -11,6 +11,7 @@ from scipy import interpolate
 
 import sys
 import glob
+
 '''
 Estimate the background of a Full Frame Image (FFI).
 This method employs basic principles from two previous works:
@@ -51,6 +52,7 @@ bkg_est : float, numpy array
 TO DO:
 -	Sigma Clip before interpolation
 -	Increase density of points near edges
+-	Include unit test
 
 '''
 
@@ -114,8 +116,8 @@ if __name__ == '__main__':
 	# Load file:
 	ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
 	ffi_type = ffis[1]
-	sfile = glob.glob('../../data/'+ffi_type+'/simulated/*.fits')[0]
-	bgfile = glob.glob('../../data/'+ffi_type+'/backgrounds.fits')[0]
+	sfile = glob.glob('../data/FFI/+'ffi_type+'.fits')[0]
+	bgfile = glob.glob('../data/FFI/backgrounds'+ffi_type+'.fits')[0]
 
 	try:
 	    hdulist = pyfits.open(sfile)
