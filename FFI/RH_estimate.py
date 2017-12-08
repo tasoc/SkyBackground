@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import glob
 import astropy.io.fits as pyfits
 from photutils import Background2D, SigmaClip, SExtractorBackground
+from astropy.stats import sigma_clip
 
 '''
 Estimate the background of a Full Frame Image (FFI) using the 'photutils' package.
@@ -58,9 +59,9 @@ if __name__ == '__main__':
     # Load file:
     ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
     ffi_type = ffis[2]
-	sfile = glob.glob('../data/FFI/+'ffi_type+'.fits')[0]
-	bgfile = glob.glob('../data/FFI/backgrounds'+ffi_type+'.fits')[0]
-    
+    sfile = glob.glob('../data/FFI/'+ffi_type+'.fits')[0]
+    bgfile = glob.glob('../data/FFI/backgrounds_'+ffi_type+'.fits')[0]
+
     try:
         hdulist = pyfits.open(sfile)
         bkglist = pyfits.open(bgfile)
