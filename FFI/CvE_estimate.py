@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 #AUTHORS:
-#T'DA1 | Carolina VAN ESSEN  | 2016
-#T'DA3 | Oliver James HALL | 2017
+#Carolina VAN ESSEN
+#Oliver James HALL
 
 import numpy as np
 import matplotlib.pylab as plt

@@ -3,8 +3,11 @@
 
 #AUTHORS:
 #Rasmus HANDBERG
+#Oliver James HALL
 
 import numpy as np
+import matplotlib.pyplot as plt
+import glob
 import astropy.io.fits as pyfits
 from photutils import Background2D, SigmaClip, SExtractorBackground
 
@@ -23,6 +26,7 @@ Output
 -----------
 bkg.background : float, numpy array
         A background estimate in the same style and shape as the FFI input.
+-----------
 
 TO DO:
 -   Write own Sigma Clip not dependent on the package, which doesnt work
@@ -78,7 +82,7 @@ if __name__ == '__main__':
     ax.set_title(ffi_type)
 
     fdiff, adiff = plt.subplots()
-    diff = adiff.imshow(np.log10(est_bkg) - np.log10(ffi), origin='lower')
+    diff = adiff.imshow(np.log10(est_bkg) - np.log10(bkg), origin='lower')
     fdiff.colorbar(diff, label='Estimated Bkg - True Bkg (both in log10 space)')
     adiff.set_title('Estimated bkg - True bkg')
 
