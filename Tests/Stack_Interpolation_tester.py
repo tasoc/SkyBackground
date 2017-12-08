@@ -2,6 +2,11 @@ import numpy as np
 import scipy.interpolate as interp
 import matplotlib.pyplot as plt
 
+'''
+Source:
+https://stackoverflow.com/questions/37872171/how-can-i-perform-two-dimensional-interpolation-using-scipy
+'''
+
 # auxiliary function for mesh generation
 def gimme_mesh(n):
     minval = -1

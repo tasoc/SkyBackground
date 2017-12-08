@@ -26,6 +26,7 @@ Output
 -----------
 bkg.background : float, numpy array
         A background estimate in the same style and shape as the FFI input.
+-----------
 
 TO DO:
 -   Write own Sigma Clip not dependent on the package, which doesnt work
