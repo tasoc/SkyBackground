@@ -58,9 +58,9 @@ TO DO:
 
 def fit_background(ffi, ribsize=8, npts=100, plots_on=False):
 	#Setting up the values required for the measurement locations
-	if ffi.shape[0] < 2048:
+	if ffi.shape[0] < 2048:	#If FFI file is a superstamp, reduce ribsize
 		ribsize = 4
-	nside = np.round(np.sqrt(npts))
+	nside = np.round(np.sqrt(npts))	#The number of points per side
 	xlen = ffi.shape[1]
 	ylen = ffi.shape[0]
 
@@ -82,9 +82,9 @@ def fit_background(ffi, ribsize=8, npts=100, plots_on=False):
 	for idx, (xx, yy) in enumerate(zip(X.ravel(), Y.ravel())):
 		y = int(yy)
 		x = int(xx)
-		ffi_eval = ffi[y-hr:y+hr, x-hr:x+hr]
+		ffi_eval = ffi[y-hr:y+hr+1, x-hr:x+hr+1]	#Adding the +1 to make the selection even
 		bkg_field[idx] = np.nanmedian(ffi_eval[ffi_eval < np.nanpercentile(ffi_eval,[20])])
-		mask[y-hr:y+hr, x-hr:x+hr] = 1
+		mask[y-hr:y+hr+1, x-hr:x+hr+1] = 1			#Saving the evaluated location in a mask
 
 	#Interpolating to draw the background
 	xx = np.arange(0,xlen,1)
@@ -109,6 +109,8 @@ def fit_background(ffi, ribsize=8, npts=100, plots_on=False):
 
 if __name__ == '__main__':
 	plt.close('all')
+
+	#Define parameters
 	plots_on = True
 	npts = 100
 	ribsize = 8
@@ -130,6 +132,7 @@ if __name__ == '__main__':
 	ffi = hdulist[0].data
 	bkg = bkglist[0].data
 
+	#Get background
 	est_bkg = fit_background(ffi, ribsize, npts, plots_on)
 
 	'''Plotting: all'''
