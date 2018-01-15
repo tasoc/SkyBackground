@@ -29,13 +29,15 @@ from astropy.stats import SigmaClip
 def fit_background(ffi):
     """
     Estimate the background of a Full Frame Image (FFI) using the photutils package.
+    This method uses the photoutils Background 2D background estimation using a
+    SExtracktorBackground estimator, a 3-sigma clip to the data, and a masking
+    of all pixels above 3e5 in flux.
 
     Parameters:
         ffi (ndarray): A single TESS Full Frame Image in the form of a 2D array.
 
     Returns:
         ndarray: Estimated background with the same size as the input image.
-        ndarray: Mask specifying which pixels was used to estimate the background.
 
     .. codeauthor:: Rasmus Handberg <rasmush@phys.au.dk>
     .. codeauthor:: Oliver James Hall <ojh251@student.bham.ac.uk>
@@ -45,20 +47,20 @@ def fit_background(ffi):
     on all machines.
     """
 
-	mask = ~np.isfinite(ffi)
-	mask |= (ffi > 3e5)
+    mask = ~np.isfinite(ffi)
+    mask |= (ffi > 3e5)
 
-	# Estimate the background:
-	sigma_clip = SigmaClip(sigma=3.0, iters=5) #Sigma clip the data
-	bkg_estimator = SExtractorBackground()     #Call background estimator
-	bkg = Background2D(ffi, (64, 64),          #Estimate background on sigma clipped data
+    # Estimate the background:
+    sigma_clip = SigmaClip(sigma=3.0, iters=5) #Sigma clip the data
+    bkg_estimator = SExtractorBackground()     #Call background estimator
+    bkg = Background2D(ffi, (64, 64),          #Estimate background on sigma clipped data
             filter_size=(3, 3),
             sigma_clip=sigma_clip,
             bkg_estimator=bkg_estimator,
             mask=mask,
             exclude_percentile=50)
 
-	return bkg.background, mask
+    return bkg.background
 
 
 if __name__ == '__main__':
@@ -66,7 +68,7 @@ if __name__ == '__main__':
 
     # Read in data
     ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
-    ffi_type = ffis[2]
+    ffi_type = ffis[0]
     sfile = glob.glob('../data/FFI/'+ffi_type+'.fits')[0]
     bgfile = glob.glob('../data/FFI/backgrounds_'+ffi_type+'.fits')[0]
 
@@ -96,5 +98,10 @@ if __name__ == '__main__':
     fdiff.colorbar(diff, label='Estimated Bkg - True Bkg (both in log10 space)')
     adiff.set_title('Estimated bkg - True bkg')
 
-    plt.show('all')
-    plt.close('all')
+	fest, aest = plt.subplots()
+	est = aest.imshow(np.log10(est_bkg), cmap='Blues_r', origin='lower')
+	fest.colorbar(est, label=r'$log_{10}$(Flux)')
+	aest.set_title('Background estimated using the RH_estimate method)
+
+	plt.show('all')
+	plt.close('all')
