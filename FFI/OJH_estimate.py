@@ -1,66 +1,72 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 
-#AUTHORS:
-#Oliver James HALL
-
-import numpy as np
-import matplotlib.pyplot as plt
-import astropy.io.fits as pyfits
-from scipy import interpolate
-
-import sys
-import glob
-
-'''
-Estimate the background of a Full Frame Image (FFI).
-This method employs basic principles from two previous works:
--	It uses the Kepler background estimation approach by measuring the
-	background in evenly spaced squares around the image.
--	It employs the same background estimation as Buzasi et al. 2015, by taking
-	the median of the lowest 20% of the selected square.
-
-The background values across the FFI are then interpolated over using the
-gaussian scipy.interpolate.rbf function with smoothing turned on.
+"""
+Function fo restimation of sky background in TESS Full Frame Images
 
 Includes a '__main__' for independent test runs on local machines.
 
-Parameters
------------
-ffi : float, numpy array
-        A single TESS Full Frame Image in the form of a 2D array.
+..versionadded:: 1.0.0
+..versionchanged:: 1.0.2
 
-ribsize : float, numpy array | default: 8
-		A single integer value that determines the length of the sides of the
-		boxes the backgrounds are measured in.
+.. codeauthor:: Oliver James Hall <ojh251@student.bham.ac.uk>
+"""
+#TODO: Sigma Clip before interpolation
+#TODO: Increase density of points near ages in style of Kepler
+#TODO: Include a unity test
 
-npts : float, numpy array | default: 100
-		A single integer value determining the number of squares at which the
-		background is to be measured across the entire image.
+import matplotlib.pyplot as plt
+import astropy.io.fits as pyfits
+import sys
+import glob
 
-plots_on : default False, boolean
-		A boolean parameter. When True, it will show a plot indicating the
-		location of the background squares across the image.
------------
+import numpy as np
+from scipy import interpolate
 
-Output
------------
-bkg_est : float, numpy array
-        A background estimate in the same style and shape as the FFI input.
------------
+
 
 TO DO:
 -	Sigma Clip before interpolation
 -	Increase density of points near edges
 -	Include unit test
 
-'''
+
 
 def fit_background(ffi, ribsize=8, npts=100, plots_on=False):
+	"""
+	Estimate the background of a Full Frame Image (FFI).
+	This method employs basic principles from two previous works:
+	-	It uses the Kepler background estimation approach by measuring the
+	background in evenly spaced squares around the image.
+	-	It employs the same background estimation as Buzasi et al. 2015, by taking
+	the median of the lowest 20% of the selected square.
+
+	The background values across the FFI are then interpolated over using the
+	gaussian scipy.interpolate.rbf function with smoothing turned on.
+
+
+	Parameters:
+		ffi (ndarray): A single TESS Full Frame Image in the form of a 2D array.
+
+		ribsize (int): Default: 8. A single integer value that determines the length
+			of the sides of the boxes the backgrounds are measured in.
+
+		npts (int): Default: 100. A single integer value determining the number of
+			squares at which the background is to be measured across the entire image.
+
+		plots_on (bool): Default False. A boolean parameter. When True, it will show
+			a plot indicating the location of the background squares across the image.
+
+	Returns:
+		ndarray: Estimated background with the same size as the input image.
+
+	.. codeauthor:: Oliver James Hall <ojh251@student.bham.ac.uk>
+	"""
+
 	#Setting up the values required for the measurement locations
-	if ffi.shape[0] < 2048:
+	if ffi.shape[0] < 2048:	#If FFI file is a superstamp, reduce ribsize
 		ribsize = 4
-	nside = np.round(np.sqrt(npts))
+	nside = np.round(np.sqrt(npts))	#The number of points per side
 	xlen = ffi.shape[1]
 	ylen = ffi.shape[0]
 
@@ -82,9 +88,9 @@ def fit_background(ffi, ribsize=8, npts=100, plots_on=False):
 	for idx, (xx, yy) in enumerate(zip(X.ravel(), Y.ravel())):
 		y = int(yy)
 		x = int(xx)
-		ffi_eval = ffi[y-hr:y+hr, x-hr:x+hr]
+		ffi_eval = ffi[y-hr:y+hr+1, x-hr:x+hr+1]	#Adding the +1 to make the selection even
 		bkg_field[idx] = np.nanmedian(ffi_eval[ffi_eval < np.nanpercentile(ffi_eval,[20])])
-		mask[y-hr:y+hr, x-hr:x+hr] = 1
+		mask[y-hr:y+hr+1, x-hr:x+hr+1] = 1			#Saving the evaluated location in a mask
 
 	#Interpolating to draw the background
 	xx = np.arange(0,xlen,1)
@@ -109,6 +115,8 @@ def fit_background(ffi, ribsize=8, npts=100, plots_on=False):
 
 if __name__ == '__main__':
 	plt.close('all')
+
+	#Define parameters
 	plots_on = True
 	npts = 100
 	ribsize = 8
@@ -116,8 +124,8 @@ if __name__ == '__main__':
 	# Load file:
 	ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
 	ffi_type = ffis[1]
-	sfile = glob.glob('../data/FFI/+'ffi_type+'.fits')[0]
-	bgfile = glob.glob('../data/FFI/backgrounds'+ffi_type+'.fits')[0]
+	sfile = glob.glob('../data/FFI/'+ffi_type+'.fits')[0]
+	bgfile = glob.glob('../data/FFI/backgrounds_'+ffi_type+'.fits')[0]
 
 	try:
 	    hdulist = pyfits.open(sfile)
@@ -130,6 +138,7 @@ if __name__ == '__main__':
 	ffi = hdulist[0].data
 	bkg = bkglist[0].data
 
+	#Get background
 	est_bkg = fit_background(ffi, ribsize, npts, plots_on)
 
 	'''Plotting: all'''
