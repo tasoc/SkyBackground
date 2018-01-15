@@ -41,10 +41,6 @@ def fit_background(ffi):
 
     .. codeauthor:: Rasmus Handberg <rasmush@phys.au.dk>
     .. codeauthor:: Oliver James Hall <ojh251@student.bham.ac.uk>
-
-    TO DO:
-    -   Write own Sigma Clip not dependent on the package, which doesnt work
-    on all machines.
     """
 
     mask = ~np.isfinite(ffi)
@@ -98,10 +94,10 @@ if __name__ == '__main__':
     fdiff.colorbar(diff, label='Estimated Bkg - True Bkg (both in log10 space)')
     adiff.set_title('Estimated bkg - True bkg')
 
-	fest, aest = plt.subplots()
-	est = aest.imshow(np.log10(est_bkg), cmap='Blues_r', origin='lower')
-	fest.colorbar(est, label=r'$log_{10}$(Flux)')
-	aest.set_title('Background estimated using the RH_estimate method)
+    fest, aest = plt.subplots()
+    est = aest.imshow(np.log10(est_bkg), cmap='Blues_r', origin='lower')
+    fest.colorbar(est, label=r'$log_{10}$(Flux)')
+    aest.set_title('Background estimated using the RH_estimate method')
 
-	plt.show('all')
-	plt.close('all')
+    plt.show('all')
+    plt.close('all')
