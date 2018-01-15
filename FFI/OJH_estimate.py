@@ -23,15 +23,6 @@ import glob
 import numpy as np
 from scipy import interpolate
 
-
-
-TO DO:
--	Sigma Clip before interpolation
--	Increase density of points near edges
--	Include unit test
-
-
-
 def fit_background(ffi, ribsize=8, npts=100, plots_on=False):
 	"""
 	Estimate the background of a Full Frame Image (FFI).
@@ -97,9 +88,10 @@ def fit_background(ffi, ribsize=8, npts=100, plots_on=False):
 	yy = np.arange(0,ylen,1)
 	Xf, Yf = np.meshgrid(xx, yy)
 
-	print('Trying to interpolate...')
+	print('Starting interpolation (CPU heavy)...')
 	fn = interpolate.Rbf(X.ravel(), Y.ravel(), bkg_field, function='gaussian')
 	bkg_est = fn(Xf, Yf)
+	print('Interpolation complete!')
 
 	#Plotting the ffi with measurement locations shown
 	if plots_on:

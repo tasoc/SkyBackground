@@ -13,9 +13,9 @@ import sys
 import glob
 
 sys.path.append('../FFI/')
-from CvE_estimate import fit_background as Efit_bkg
-# from RH_estimate import fit_background as Rfit_bkg
-from OJH_estimate import fit_background as Hfit_bkg
+from CvE_estimate import fit_background as CEfit_bkg
+from RH_estimate import fit_background as RHfit_bkg
+from OJH_estimate import fit_background as OHfit_bkg
 
 
 '''
@@ -47,11 +47,13 @@ if __name__ == "__main__":
     ffi_type = ffis[0]
     ffi, bkg = load_file(ffi_type)
 
-    CvE = Efit_bkg(ffi)
-    OJH = Hfit_bkg(ffi)
+    CvE = CEfit_bkg(ffi)
+    OJH = OHfit_bkg(ffi)
+    RH  = RHfit_bkg(ffi)
 
     stdCvE = np.std(CvE-bkg)
     stdOJH = np.std(OJH-bkg)
+    stdRH  = np.std(RH-bkg)
 
     '''Plotting: all'''
     plt.close('all')
@@ -70,13 +72,25 @@ if __name__ == "__main__":
     fH.colorbar(diffH, label=r'$log_{10}$(Flux)')
     aH.set_title('OJH_estimate | Estimated bkg - True bkg')
 
-    fhist, ahist = plt.subplots(2, sharex=True)
+    fRH, aRH = plt.subplots()
+    diffRH = aRH.imshow(np.log10(RH) - np.log10(bkg),origin='lower')
+    fRH.colorbar(diffRH, label=r'$log_{10}$(Flux)')
+    aRH.set_title('RH_estimate | Estimated bkg - True bkg')
+
+    fhist, ahist = plt.subplots(3, sharex=True)
     ahist[0].hist((CvE-bkg).ravel(),histtype='step',bins=int(np.sqrt(len(bkg.ravel()))))
     ahist[1].hist((OJH-bkg).ravel(),histtype='step',bins=int(np.sqrt(len(bkg.ravel()))))
+    ahist[2].hist((RH-bkg).ravel(),histtype='step',bins=int(np.sqrt(len(bkg.ravel()))))
     ahist[0].set_title('Histogram of residuals for CvE')
     ahist[1].set_title('Histogram of residuals for OJH')
+    ahist[2].set_title('Histogram of residuals for RH')
     ahist[1].set_xlabel('Background Estimate - True Background')
+    fhist.tight_layout()
 
+    print('Standard deviations on all 3 residuals:')
+    print('CvE: '+str(stdCvE)+' == '+str(np.round(100*stdCvE/np.mean(bkg),2))+'% of mean')
+    print('OJH: '+str(stdOJH)+' == '+str(np.round(100*stdOJH/np.mean(bkg),2))+'% of mean')
+    print('RH: '+str(stdRH)+' == '+str(np.round(100*stdRH/np.mean(bkg),2))+'% of mean')
 
     plt.show('all')
     plt.close('all')
