@@ -12,15 +12,13 @@ Includes a '__main__' for independent test runs on local machines.
 .. codeauthor:: Carolina Von Essen <cessen@phys.au.dk>
 .. codeauthor:: Oliver James Hall <ojh251@student.bham.ac.uk>
 """
-#TODO: Write up more clearly how the code functions
-#TODO: Add more in-depth comments
 
-import numpy as np
 import matplotlib.pylab as plt
 import scipy
 import pyfits
 import glob
 
+import numpy as np
 import scipy.ndimage
 import scipy.integrate
 from PyAstronomy import pyasl
