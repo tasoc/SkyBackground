@@ -61,14 +61,40 @@ def fit_background(ffi, ribsize=8, npts=100, plots_on=False):
 	xlen = ffi.shape[1]
 	ylen = ffi.shape[0]
 
-	#Getting the spacing of points
-	lx = xlen/(nside+2)
-	ly = ylen/(nside+2)
+	# #Getting the spacing of points
+	# lx = xlen/(nside+2)
+	# ly = ylen/(nside+2)
 
-	#Generating the points meshgrid
-	xlocs = np.round(np.linspace(lx, xlen-lx, nside))
-	ylocs = np.round(np.linspace(ly, ylen-ly, nside))
-	X, Y = np.meshgrid(xlocs, ylocs)
+	# #Generating the points meshgrid
+	# xlocs = np.round(np.linspace(lx, xlen-lx, nside))
+	# ylocs = np.round(np.linspace(ly, ylen-ly, nside))
+	# X, Y = np.meshgrid(xlocs, ylocs)
+
+	perc = 0.2
+
+	superx = perc*xlen
+	supery = perc*ylen
+
+	nsuper = perc*nside
+	nreg = (1-perc)*nside
+
+	lx = superx/(nsuper+2)
+	ly = supery/(nsuper+2)
+
+	xlocs_left = np.linspace(lx, superx-lx, nsuper)
+	ylocs_left = np.linspace(ly, supery-ly, nsuper)
+
+	xlocs_right = np.linspace(xlen-superx+lx, xlen-lx, nsuper)
+	ylocs_right = np.linspace(ylen-supery+ly, ylen-ly, nsuper)
+
+	xlocs_mid = np.linspace(superx,xlen-superx,nreg)
+	ylocs_mid = np.linspace(supery,ylen-supery,nreg)
+
+	xx = np.append(xlocs_left, xlocs_mid)
+	xx = np.append(xx, xlocs_right)
+	yy = np.append(ylocs_left, ylocs_mid)
+	yy = np.append(yy, ylocs_right)
+	X, Y = np.meshgrid(xx, yy)
 
 	#Setting up a mask with points considered for background estimation
 	mask = np.zeros_like(ffi)
@@ -84,14 +110,9 @@ def fit_background(ffi, ribsize=8, npts=100, plots_on=False):
 		mask[y-hr:y+hr+1, x-hr:x+hr+1] = 1			#Saving the evaluated location in a mask
 
 	#Interpolating to draw the background
-	xx = np.arange(0,xlen,1)
-	yy = np.arange(0,ylen,1)
+	xx = np.arange(xlen)
+	yy = np.arange(ylen)
 	Xf, Yf = np.meshgrid(xx, yy)
-
-	print('Starting interpolation (CPU heavy)...')
-	fn = interpolate.Rbf(X.ravel(), Y.ravel(), bkg_field, function='gaussian')
-	bkg_est = fn(Xf, Yf)
-	print('Interpolation complete!')
 
 	#Plotting the ffi with measurement locations shown
 	if plots_on:
@@ -101,6 +122,12 @@ def fit_background(ffi, ribsize=8, npts=100, plots_on=False):
 		ax.set_title(ffi_type)
 		ax.contour(mask, c='r', N=1)
 		plt.show()
+
+	print('Starting interpolation (CPU heavy)...')
+	fn = interpolate.Rbf(X.ravel(), Y.ravel(), bkg_field, function='gaussian')
+	bkg_est = fn(Xf, Yf)
+	print('Interpolation complete!')
+
 
 	return bkg_est
 
