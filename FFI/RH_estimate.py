@@ -6,8 +6,8 @@ Function for estimation of sky background in TESS Full Frame Images.
 
 Includes a '__main__' for independent test runs on local machines.
 
-..versionadded:: 1.0.0
-..versionchanged:: 1.0.2
+.. versionadded:: 1.0.0
+.. versionchanged:: 1.0.2
 
 Notes: Copied over from TASOC/photometry/backgrounds.py [15/01/18]
 
