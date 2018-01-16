@@ -6,8 +6,8 @@ Function fo restimation of sky background in TESS Full Frame Images
 
 Includes a '__main__' for independent test runs on local machines.
 
-..versionadded:: 1.0.0
-..versionchanged:: 1.0.2
+.. versionadded:: 1.0.0
+.. versionchanged:: 1.0.2
 
 .. codeauthor:: Carolina Von Essen <cessen@phys.au.dk>
 .. codeauthor:: Oliver James Hall <ojh251@student.bham.ac.uk>
