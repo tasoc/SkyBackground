@@ -15,6 +15,7 @@ Includes a '__main__' for independent test runs on local machines.
 #TODO: Include a unity test
 
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Button
 import astropy.io.fits as pyfits
 import sys
 import glob
@@ -23,7 +24,7 @@ import numpy as np
 from scipy import interpolate
 
 from MNL_estimate import cPlaneModel
-
+from Functions import *
 
 
 def fit_background(ffi, ribsize=8, nside=10, plots_on=False):
@@ -145,19 +146,8 @@ if __name__ == '__main__':
 	# Load file:
 	ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
 	ffi_type = ffis[1]
-	sfile = glob.glob('../data/FFI/'+ffi_type+'.fits')[0]
-	bgfile = glob.glob('../data/FFI/backgrounds_'+ffi_type+'.fits')[0]
 
-	try:
-	    hdulist = pyfits.open(sfile)
-	    bkglist = pyfits.open(bgfile)
-
-	except IOError:
-	    print('File not located correctly.')
-	    exit()
-
-	ffi = hdulist[0].data
-	bkg = bkglist[0].data
+	ffi, bkg = load_file(ffi_type)
 
 	#Get background
 	est_bkg = fit_background(ffi, ribsize, nside, plots_on)
@@ -178,6 +168,9 @@ if __name__ == '__main__':
 	est = aest.imshow(np.log10(est_bkg), cmap='Blues_r', origin='lower')
 	fest.colorbar(est, label=r'$log_{10}$(Flux)')
 	aest.set_title('Background estimated with '+str(npts)+' squares of '+str(ribsize)+'x'+str(ribsize))
+
+    cc, button = close_plots()
+    button.on_clicked(close)
 
 	plt.show('all')
 	plt.close('all')
