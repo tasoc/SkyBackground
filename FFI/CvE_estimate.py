@@ -23,7 +23,7 @@ import scipy.ndimage
 import scipy.integrate
 from PyAstronomy import pyasl
 
-
+from Functions import *
 
 def fit_background(ffi, plots_on = False):
     """
@@ -116,24 +116,12 @@ def fit_background(ffi, plots_on = False):
 if __name__ == '__main__':
     # Set up parameters
     plt.close('all')
-    plots_on = True
+    plots_on = False
 
     # Read in data
     ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
     ffi_type = ffis[0]
-    sfile = glob.glob('../data/FFI/'+ffi_type+'.fits')[0]
-    bgfile = glob.glob('../data/FFI/backgrounds_'+ffi_type+'.fits')[0]
-
-    try:
-        hdulist = pyfits.open(sfile)
-        bkglist = pyfits.open(bgfile)
-
-    except IOError:
-        print('File not located correctly.')
-        exit()
-
-    ffi = hdulist[0].data
-    bkg = bkglist[0].data
+    ffi, bkg = load_files(ffi_type)
 
     # Run background estimation
     est_bkg = fit_background(ffi, plots_on)
@@ -161,6 +149,9 @@ if __name__ == '__main__':
     diff = adiff.imshow(np.log10(est_bkg) - np.log10(bkg), origin='lower')
     fdiff.colorbar(diff, label='Estimated Bkg - True Bkg (both in log10 space)')
     adiff.set_title('Estimated bkg - True bkg')
+
+    cc, button = close_plots()
+    button.on_clicked(close)
 
     plt.show('all')
     plt.close('all')

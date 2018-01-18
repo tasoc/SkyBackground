@@ -7,15 +7,14 @@ Function fo restimation of sky background in TESS Full Frame Images
 Includes a '__main__' for independent test runs on local machines.
 
 .. versionadded:: 1.0.0
-.. versionchanged:: 1.0.2
+.. versionchanged:: 1.1
 
 .. codeauthor:: Oliver James Hall <ojh251@student.bham.ac.uk>
 """
-#TODO: Sigma Clip before interpolation
-#TODO: Increase density of points near ages in style of Kepler
 #TODO: Include a unity test
 
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Button
 import astropy.io.fits as pyfits
 import sys
 import glob
@@ -23,7 +22,11 @@ import glob
 import numpy as np
 from scipy import interpolate
 
-def fit_background(ffi, ribsize=8, npts=100, plots_on=False):
+from MNL_estimate import cPlaneModel
+from Functions import *
+
+
+def fit_background(ffi, ribsize=8, nside=10, plots_on=False):
 	"""
 	Estimate the background of a Full Frame Image (FFI).
 	This method employs basic principles from two previous works:
@@ -32,8 +35,8 @@ def fit_background(ffi, ribsize=8, npts=100, plots_on=False):
 	-	It employs the same background estimation as Buzasi et al. 2015, by taking
 	the median of the lowest 20% of the selected square.
 
-	The background values across the FFI are then interpolated over using the
-	gaussian scipy.interpolate.rbf function with smoothing turned on.
+	The background values across the FFI are then fit to with a 2D polynomial
+	using the cPlaneModels class from the MNL_estimate code.
 
 
 	Parameters:
@@ -42,8 +45,8 @@ def fit_background(ffi, ribsize=8, npts=100, plots_on=False):
 		ribsize (int): Default: 8. A single integer value that determines the length
 			of the sides of the boxes the backgrounds are measured in.
 
-		npts (int): Default: 100. A single integer value determining the number of
-			squares at which the background is to be measured across the entire image.
+		nside (int): Default: 100. The number of points a side to evaluate the
+			background for, not consider additional points for corners and edges.
 
 		plots_on (bool): Default False. A boolean parameter. When True, it will show
 			a plot indicating the location of the background squares across the image.
@@ -57,18 +60,36 @@ def fit_background(ffi, ribsize=8, npts=100, plots_on=False):
 	#Setting up the values required for the measurement locations
 	if ffi.shape[0] < 2048:	#If FFI file is a superstamp, reduce ribsize
 		ribsize = 4
-	nside = np.round(np.sqrt(npts))	#The number of points per side
+
 	xlen = ffi.shape[1]
 	ylen = ffi.shape[0]
 
-	#Getting the spacing of points
+	perc = 0.1
+
 	lx = xlen/(nside+2)
 	ly = ylen/(nside+2)
 
-	#Generating the points meshgrid
-	xlocs = np.round(np.linspace(lx, xlen-lx, nside))
-	ylocs = np.round(np.linspace(ly, ylen-ly, nside))
-	X, Y = np.meshgrid(xlocs, ylocs)
+	superx = lx/2
+	supery = ly/2
+
+	nsuper = perc*nside*2
+	nreg = (1-2*perc)*nside
+
+	xend = perc*xlen
+	yend = perc*xlen
+
+	xlocs_left = np.linspace(superx, xend-superx, nsuper)
+	ylocs_left = np.linspace(supery, yend-supery, nsuper)
+
+	xlocs_right = np.linspace(xlen-xend+superx, xlen-superx, nsuper)
+	ylocs_right = np.linspace(ylen-yend+supery, ylen-supery, nsuper)
+
+	xlocs_mid = np.linspace(xend,xlen-xend,nreg)
+	ylocs_mid = np.linspace(yend,ylen-yend,nreg)
+
+	xx = np.append(xlocs_mid, [xlocs_left, xlocs_right])
+	yy = np.append(ylocs_mid, [ylocs_left,ylocs_right])
+	X, Y = np.meshgrid(xx, yy)
 
 	#Setting up a mask with points considered for background estimation
 	mask = np.zeros_like(ffi)
@@ -83,15 +104,6 @@ def fit_background(ffi, ribsize=8, npts=100, plots_on=False):
 		bkg_field[idx] = np.nanmedian(ffi_eval[ffi_eval < np.nanpercentile(ffi_eval,[20])])
 		mask[y-hr:y+hr+1, x-hr:x+hr+1] = 1			#Saving the evaluated location in a mask
 
-	#Interpolating to draw the background
-	xx = np.arange(0,xlen,1)
-	yy = np.arange(0,ylen,1)
-	Xf, Yf = np.meshgrid(xx, yy)
-
-	print('Starting interpolation (CPU heavy)...')
-	fn = interpolate.Rbf(X.ravel(), Y.ravel(), bkg_field, function='gaussian')
-	bkg_est = fn(Xf, Yf)
-	print('Interpolation complete!')
 
 	#Plotting the ffi with measurement locations shown
 	if plots_on:
@@ -102,6 +114,22 @@ def fit_background(ffi, ribsize=8, npts=100, plots_on=False):
 		ax.contour(mask, c='r', N=1)
 		plt.show()
 
+	print('Fitting a 2D polynomial using the cPlaneModel')
+	#Preparing the data
+	neighborhood = np.zeros([len(bkg_field),3])
+	neighborhood[:, 0] = X.flatten()
+	neighborhood[:, 1] = Y.flatten()
+	neighborhood[:, 2] = bkg_field
+
+	#Setting up the Plane Model Class
+	Model = cPlaneModel(order=2, weights=None)
+	Fit = Model.fit(neighborhood)
+	fit_coeffs = Fit.coeff
+
+	#Constructing the model on a grid the size of the full ffi
+	Xf, Yf = np.meshgrid(np.arange(xlen), np.arange(ylen))
+	bkg_est = Model.evaluate(Xf, Yf, fit_coeffs)
+
 	return bkg_est
 
 
@@ -110,28 +138,18 @@ if __name__ == '__main__':
 
 	#Define parameters
 	plots_on = True
-	npts = 100
+	nside = 25
+	npts = nside**2
 	ribsize = 8
 
 	# Load file:
 	ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
 	ffi_type = ffis[1]
-	sfile = glob.glob('../data/FFI/'+ffi_type+'.fits')[0]
-	bgfile = glob.glob('../data/FFI/backgrounds_'+ffi_type+'.fits')[0]
 
-	try:
-	    hdulist = pyfits.open(sfile)
-	    bkglist = pyfits.open(bgfile)
-
-	except IOError:
-	    print('File not located correctly.')
-	    exit()
-
-	ffi = hdulist[0].data
-	bkg = bkglist[0].data
+	ffi, bkg = load_files(ffi_type)
 
 	#Get background
-	est_bkg = fit_background(ffi, ribsize, npts, plots_on)
+	est_bkg = fit_background(ffi, ribsize, nside, plots_on)
 
 	'''Plotting: all'''
 	print('The plots are up!')
@@ -149,6 +167,9 @@ if __name__ == '__main__':
 	est = aest.imshow(np.log10(est_bkg), cmap='Blues_r', origin='lower')
 	fest.colorbar(est, label=r'$log_{10}$(Flux)')
 	aest.set_title('Background estimated with '+str(npts)+' squares of '+str(ribsize)+'x'+str(ribsize))
+
+    cc, button = close_plots()
+    button.on_clicked(close)
 
 	plt.show('all')
 	plt.close('all')

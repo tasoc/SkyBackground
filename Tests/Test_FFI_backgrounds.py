@@ -21,32 +21,15 @@ from CvE_estimate import fit_background as CEfit_bkg
 from RH_estimate import fit_background as RHfit_bkg
 from OJH_estimate import fit_background as OHfit_bkg
 from MNL_estimate import fit_background as MLfit_bkg
-
-
-def load_file(ffi_type):
-    sfile = glob.glob('../data/FFI/'+ffi_type+'.fits')[0]
-    bgfile = glob.glob('../data/FFI/backgrounds_'+ffi_type+'.fits')[0]
-
-    try:
-        hdulist = pyfits.open(sfile)
-        bkglist = pyfits.open(bgfile)
-
-    except IOError:
-        print('File not located correctly.')
-        exit()
-
-    ffi = hdulist[0].data
-    bkg = bkglist[0].data
-
-    return ffi, bkg
+from Functions import *
 
 if __name__ == "__main__":
     plt.close('all')
 
     # Load file:
     ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
-    ffi_type = ffis[1]
-    ffi, bkg = load_file(ffi_type)
+    ffi_type = ffis[0]
+    ffi, bkg = load_files(ffi_type)
 
     print('fitting ML')
     ML = MLfit_bkg(ffi)
@@ -112,6 +95,9 @@ if __name__ == "__main__":
     print('OJH: '+str(stdOJH)+' == '+str(np.round(100*stdOJH/np.mean(bkg),2))+'% of mean')
     print('RH: '+str(stdRH)+' == '+str(np.round(100*stdRH/np.mean(bkg),2))+'% of mean')
     print('ML: '+str(stdML)+' == '+str(np.round(100*stdML/np.mean(bkg),2))+'% of mean')
+
+    cc, button = close_plots()
+    button.on_clicked(close)
 
     plt.show('all')
     plt.close('all')

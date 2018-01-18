@@ -119,10 +119,15 @@ class cPlaneModel:
 		A = cPlaneModel.Amet(self, X2, Y2)	#Building the model
 		B = data[:,2]	#Calling the modes
 
-		W = self.weights/np.sum(self.weights)	#Normalize the inlier mask
-		W = np.diag(np.sqrt(W))		#Create diagonal stucture for dotting
-		Aw = np.dot(W,A)			#Multiply the model with weights
-		Bw = np.dot(B,W)			#Multiply the mdoes with the weights
+		if not self.weights is None:
+			W = self.weights/np.sum(self.weights)	#Normalize the inlier mask
+			W = np.diag(np.sqrt(W))		#Create diagonal stucture for dotting
+			Aw = np.dot(W,A)			#Multiply the model with weights
+			Bw = np.dot(B,W)			#Multiply the mdoes with the weights
+
+		else:
+			Aw = A
+			Bw = B
 
 		#Fit the weighted model to the weighted data using a least squares fit
 		coeff, r, rank, s = np.linalg.lstsq(Aw, Bw)
@@ -180,16 +185,16 @@ def fRANSAC(F, neighborhood, iterations):
 	return inlier_masks, coeffs
 
 def fit_background(ffi, size=128, itt_field=1, itt_ransac=500, plots_on=False):
-    """
-    Estimate the background of a Full Frame Image (FFI) using a number of steps:
+	"""
+	Estimate the background of a Full Frame Image (FFI) using a number of steps:
 		-Split the FFI into sub-sections of width 'size'
 		-Fit the continuum of each subsection using RANSAC
 		-Find the mode of the RANSAC qualified inliers
 		-Fit to the continuum of the composite image of modes using RANSAC
 		-Fit a 2D polynomial to the modes using the inlier masks as weights
 
-    Parameters:
-        ffi (ndarray): A single TESS Full Frame Image in the form of a 2D array.
+	Parameters:
+	    ffi (ndarray): A single TESS Full Frame Image in the form of a 2D array.
 
 		size (int): Default 128. The width of each sub-section of the ffi. Must
 			multiply up to the width of the full FFI.
@@ -200,16 +205,16 @@ def fit_background(ffi, size=128, itt_field=1, itt_ransac=500, plots_on=False):
 		itt_ransac (int): Default 500. The number of RANSAC fits to make to the
 			calculated modes across the full FFI.
 
-        plots_on (bool): Default False. When True, it will plot an example of
-            the method fitting to the first line of data on the first iteration
-            of the fitting loop.
+	    plots_on (bool): Default False. When True, it will plot an example of
+	        the method fitting to the first line of data on the first iteration
+	        of the fitting loop.
 
-    Returns:
-        ndarray: Estimated background with the same size as the input image.
+	Returns:
+	    ndarray: Estimated background with the same size as the input image.
 
 	.. codeauthor:: Mikkel Nørup Lund <mikkelnl@phys.au.dk>
-    .. codeauthor:: Oliver James Hall <ojh251@student.bham.ac.uk>
-    """
+	.. codeauthor:: Oliver James Hall <ojh251@student.bham.ac.uk>
+	"""
 
 	#Cutting the ffi up into 'size' smaller blocks
 	block_ffi = (ffi.reshape(ffi.shape[0]//size, size, -1, size)
@@ -275,8 +280,8 @@ def fit_background(ffi, size=128, itt_field=1, itt_ransac=500, plots_on=False):
 
 	#Construct the models for the sizexsize grid and the full ffi grid
 	Xfull, Yfull = np.meshgrid(np.arange(ffi.shape[1]), np.arange(ffi.shape[0]))
-	M = Model.evaluate(Y, X, fit_coeffs)
-	bkg_est = Model.evaluate(Yfull, Xfull, fit_coeffs)
+	M = Model.evaluate(X, Y, fit_coeffs)
+	bkg_est = Model.evaluate(Xfull, Yfull, fit_coeffs)
 
 	return bkg_est
 
@@ -284,19 +289,8 @@ def fit_background(ffi, size=128, itt_field=1, itt_ransac=500, plots_on=False):
 if __name__ == '__main__':
 	ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
 	ffi_type = ffis[1]
-	sfile = glob.glob('../data/FFI/'+ffi_type+'.fits')[0]
-	bgfile = glob.glob('../data/FFI/backgrounds_'+ffi_type+'.fits')[0]
 
-	try:
-		hdulist = pyfits.open(sfile)
-		bkglist = pyfits.open(bgfile)
-
-	except IOError:
-		print('File not located correctly.')
-		exit()
-
-	ffi = hdulist[0].data
-	bkg = bkglist[0].data
+	ffi, bkg = load_files(ffi_type)
 
 	'''Program starts here:'''
 	size = 128   		#Number of blocks to cut the ffi into
