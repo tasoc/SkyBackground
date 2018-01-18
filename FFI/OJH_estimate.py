@@ -24,10 +24,11 @@ from scipy import interpolate
 from scipy import stats
 
 from MNL_estimate import cPlaneModel
+from MNL_estimate import fRANSAC
 from Functions import *
 
 
-def fit_background(ffi, ribsize=8, nside=10, order=1, plots_on=False):
+def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, order=1, plots_on=False):
 	"""
 	Estimate the background of a Full Frame Image (FFI).
 	This method employs basic principles from two previous works:
@@ -48,6 +49,9 @@ def fit_background(ffi, ribsize=8, nside=10, order=1, plots_on=False):
 
 		nside (int): Default: 100. The number of points a side to evaluate the
 			background for, not consider additional points for corners and edges.
+
+		itt_ransac (int): Default 500. The number of RANSAC fits to make to the
+			calculated modes across the full FFI.
 
 		order (int): Default: 1. The desired order of the polynomial to be fit
 			to the estimated background points.
@@ -130,8 +134,15 @@ def fit_background(ffi, ribsize=8, nside=10, order=1, plots_on=False):
 	neighborhood[:, 1] = Y.flatten()
 	neighborhood[:, 2] = bkg_field
 
+	#Getting the inlier masks with RANSAC to expel outliers
+	inlier_masks, coeffs = fRANSAC(modes, neighborhood, itt_ransac)
+
+	if plots_on:
+		fig = corner.corner(coffs, labels=['m','c'])
+		plt.show()
+		
 	#Setting up the Plane Model Class
-	Model = cPlaneModel(order=order, weights=None)
+	Model = cPlaneModel(order=order, weights=inlier_masks)
 	Fit = Model.fit(neighborhood)
 	fit_coeffs = Fit.coeff
 
@@ -150,17 +161,18 @@ if __name__ == '__main__':
 	nside = 25
 	npts = nside**2
 	ribsize = 8
-	order = 0
+	itt_ransac = 500
+	order = 1
 
 	# Load file:
 	ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
 	ffi_type = ffis[1]
 
-	# ffi, bkg = load_files(ffi_type)
-	ffi, bkg = get_sim()
+	ffi, bkg = load_files(ffi_type)
+	# ffi, bkg = get_sim()
 
 	#Get background
-	est_bkg = fit_background(ffi, ribsize, nside, order, plots_on)
+	est_bkg = fit_background(ffi, ribsize, nside, itt_ransac, order, plots_on)
 
 	'''Plotting: all'''
 	print('The plots are up!')

@@ -101,7 +101,7 @@ def fit_background(ffi, percentile=10, plots_on = False):
             if (i == 0):
                 #Showing data with continuum estimation from method
                 fig, ax = plt.subplots()
-                # ax.set_ylim(130000., 90000.)
+                ax.set_ylim(130000., 90000.)
                 ax.set_title('Low end of FFI data sliced in y with continuum estimation shown')
                 ax.plot(ndim_vec, y_msky, 'r-', label='FFI data')
                 ax.plot(ndim_vec, y_min_vec_int, 'b-', label='Binned estimate')
@@ -115,7 +115,7 @@ def fit_background(ffi, percentile=10, plots_on = False):
     ffi_smooth_xx = scipy.ndimage.gaussian_filter(ffi_smooth_x, kern_px/(2*np.sqrt(2*np.log(2))))
 
     # Taking the average between the two images
-    bkg_est_unfilt = (ffi_smooth_yy + ffi_smooth_xx)/2.
+    bkg_est = (ffi_smooth_yy + ffi_smooth_xx)/2.
 
     return bkg_est
 
@@ -123,13 +123,13 @@ if __name__ == '__main__':
     # Set up parameters
     plt.close('all')
     plots_on = True
-    percentile = 50
+    percentile = 10
 
     # Read in data
     ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
     ffi_type = ffis[0]
-    # ffi, bkg = load_files(ffi_type)
-    ffi, bkg = get_sim()
+    ffi, bkg = load_files(ffi_type)
+    # ffi, bkg = get_sim()
 
     # Run background estimation
     est_bkg = fit_background(ffi, percentile, plots_on)

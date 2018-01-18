@@ -36,7 +36,7 @@ if __name__ == "__main__":
     print('fitting RH')
     RH  = RHfit_bkg(ffi)
     print('fitting CvE')
-    CvE = CEfit_bkg(ffi)
+    CvE = CEfit_bkg(ffi, percentile=50)
 
     resML = ML-bkg
     resOJH = OJH-bkg
