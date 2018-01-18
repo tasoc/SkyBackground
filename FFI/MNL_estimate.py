@@ -289,19 +289,8 @@ def fit_background(ffi, size=128, itt_field=1, itt_ransac=500, plots_on=False):
 if __name__ == '__main__':
 	ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
 	ffi_type = ffis[1]
-	sfile = glob.glob('../data/FFI/'+ffi_type+'.fits')[0]
-	bgfile = glob.glob('../data/FFI/backgrounds_'+ffi_type+'.fits')[0]
 
-	try:
-		hdulist = pyfits.open(sfile)
-		bkglist = pyfits.open(bgfile)
-
-	except IOError:
-		print('File not located correctly.')
-		exit()
-
-	ffi = hdulist[0].data
-	bkg = bkglist[0].data
+	ffi, bkg = load_files(ffi_type)
 
 	'''Program starts here:'''
 	size = 128   		#Number of blocks to cut the ffi into

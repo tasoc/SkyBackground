@@ -16,7 +16,7 @@ import matplotlib.mlab as mlab
 from matplotlib.widgets import Button
 import astropy.io.fits as pyfits
 
-def load_file(ffi_type):
+def load_files(ffi_type):
     '''
     A function that reads in the FFI testing data from inside the git repo.
 
@@ -48,6 +48,22 @@ def load_file(ffi_type):
     return ffi, bkg
 
 def close_plots():
+    '''
+    A function that plots a button to instantly close all subplots. Useful when
+    plotting a large number of comparisons.
+
+    Returns:
+        matplotlib.figure.Figure: 1 by 1 plot containing a 'close all' button.
+
+        matplotlib.widgets.Button: A button widget required for button function.
+
+    Note: Must be called with the line:
+        button.on_clicked(close)
+
+    Note: The close function must also be imported. Best to use
+        from Functions import *
+
+    '''
     fig, ax = plt.subplots(figsize=(1,1))
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
@@ -58,5 +74,5 @@ def close_plots():
     return fig, button
 
 def close(event):
+    ''' A simple plt.close('all') function for use with close_plots().'''
     plt.close('all')
-    return 0

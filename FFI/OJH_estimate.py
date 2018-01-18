@@ -7,11 +7,10 @@ Function fo restimation of sky background in TESS Full Frame Images
 Includes a '__main__' for independent test runs on local machines.
 
 .. versionadded:: 1.0.0
-.. versionchanged:: 1.0.2
+.. versionchanged:: 1.1
 
 .. codeauthor:: Oliver James Hall <ojh251@student.bham.ac.uk>
 """
-#TODO: Sigma Clip before interpolation
 #TODO: Include a unity test
 
 import matplotlib.pyplot as plt
@@ -147,7 +146,7 @@ if __name__ == '__main__':
 	ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
 	ffi_type = ffis[1]
 
-	ffi, bkg = load_file(ffi_type)
+	ffi, bkg = load_files(ffi_type)
 
 	#Get background
 	est_bkg = fit_background(ffi, ribsize, nside, plots_on)

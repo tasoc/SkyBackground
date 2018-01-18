@@ -121,7 +121,7 @@ if __name__ == '__main__':
     # Read in data
     ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
     ffi_type = ffis[0]
-    ffi, bkg = load_file(ffi_type)
+    ffi, bkg = load_files(ffi_type)
 
     # Run background estimation
     est_bkg = fit_background(ffi, plots_on)
