@@ -15,8 +15,10 @@ import glob
 import matplotlib.mlab as mlab
 from matplotlib.widgets import Button
 import astropy.io.fits as pyfits
+import scipy.ndimage as nd
 
-def circular_filter(data, diam=50, percentile=10, filter_type='percentile'):
+
+def circular_filter(data, diam=10, percentile=10, filter_type='percentile'):
     '''
     A function that runs a filter of choice using a circular footprint of a
     diameter determined by the user.
@@ -24,7 +26,7 @@ def circular_filter(data, diam=50, percentile=10, filter_type='percentile'):
     Parameters:
         data (ndarray): An array containing the unsmoothed data.
 
-        diam (int): Default: 50. The desired diameter in pixels of the circular
+        diam (int): Default: 10. The desired diameter in pixels of the circular
             footprint.
 
         percentile (int): Default: 10. The desired percentile to use on the percentile
@@ -43,7 +45,7 @@ def circular_filter(data, diam=50, percentile=10, filter_type='percentile'):
     X, Y = np.meshgrid(np.arange(diam), np.arange(diam))    #Creating a meshgrid
     circle = (X - core)**2 + (Y-core)**2        #Building the circle in the meshgrid
     lim = circle[np.where(circle==0)[0]][:,0]   #Finding the value at the diameter edge
-    circle[circle < = lim] = 1  #Setting all values inside of the circle to 1
+    circle[circle <= lim] = 1  #Setting all values inside of the circle to 1
     circle[circle > lim] = 0    #Setting all values outside of the circle to 0
 
     if filter_type == 'percentile':

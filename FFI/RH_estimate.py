@@ -57,13 +57,12 @@ def fit_background(ffi):
             mask=mask,
             exclude_percentile=50)
 
-    bkg_est = bkg.background
+    bkg_est_unfilt = bkg.background
 
-    #Smoothing the background using a median filter
-    
+    #Smoothing the background using a percentile filter
+    bkg_est = circular_filter(bkg_est_unfilt, diam=15, percentile=50, filter_type='percentile')
 
-
-    return bkg.background
+    return bkg_est
 
 
 if __name__ == '__main__':

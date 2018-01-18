@@ -121,7 +121,8 @@ if __name__ == '__main__':
     # Read in data
     ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
     ffi_type = ffis[0]
-    ffi, bkg = load_files(ffi_type)
+    # ffi, bkg = load_files(ffi_type)
+    ffi, bkg = get_sim()
 
     # Run background estimation
     est_bkg = fit_background(ffi, plots_on)
@@ -132,18 +133,17 @@ if __name__ == '__main__':
     fig.colorbar(im,label=r'$log_{10}$(Flux)')
     ax.set_title(ffi_type)
 
-    if plots_on:
-        fbf, abf = plt.subplots()
-        bgf = abf.imshow(np.log10(est_bkg), cmap='Blues_r', origin='lower')
-        fbf.colorbar(bgf, label=r'$log_{10}$(Flux)')
-        abf.set_title('Background averaged across evaluations in x and y')
+    fbf, abf = plt.subplots()
+    bgf = abf.imshow(np.log10(est_bkg), cmap='Blues_r', origin='lower')
+    fbf.colorbar(bgf, label=r'$log_{10}$(Flux)')
+    abf.set_title('Background averaged across evaluations in x and y')
 
-        ftru, atru = plt.subplots()
-        btru = atru.imshow(np.log10(bkg), cmap='Blues_r', origin='lower')
-        ftru.colorbar(btru, label=r'$log_{10}$(Flux)')
-        atru.set_xlabel('Pixel #')
-        atru.set_ylabel('Pixel #')
-        atru.set_title('True background of simulated data')
+    ftru, atru = plt.subplots()
+    btru = atru.imshow(np.log10(bkg), cmap='Blues_r', origin='lower')
+    ftru.colorbar(btru, label=r'$log_{10}$(Flux)')
+    atru.set_xlabel('Pixel #')
+    atru.set_ylabel('Pixel #')
+    atru.set_title('True background of simulated data')
 
     fdiff, adiff = plt.subplots()
     diff = adiff.imshow(np.log10(est_bkg) - np.log10(bkg), origin='lower')
@@ -152,6 +152,11 @@ if __name__ == '__main__':
 
     cc, button = close_plots()
     button.on_clicked(close)
+
+    resCvE = est_bkg - bkg
+    medCvE = np.median(100*resCvE/bkg)
+    stdCvE = np.std(100*resCvE/bkg)
+    print('CvE offset: '+str(np.round(medCvE,3))+r"% $\pm$ "+str(np.round(stdCvE,3))+'%')
 
     plt.show('all')
     plt.close('all')
