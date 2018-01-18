@@ -23,18 +23,6 @@ from OJH_estimate import fit_background as OHfit_bkg
 from MNL_estimate import fit_background as MLfit_bkg
 from Functions import *
 
-def get_sim():
-    shape = (2048,2048)
-
-    X, Y = np.meshgrid(np.arange(shape[1]),np.arange(shape[0]))
-    z = 1000.
-    sigma = 100.
-
-    sim = np.random.normal(z, 10., shape)
-
-    return sim, np.ones(shape)*z
-
-
 
 if __name__ == "__main__":
     plt.close('all')
@@ -126,10 +114,10 @@ if __name__ == "__main__":
     stdML = np.std(100*resML/bkg)
 
     print('Median offset & standard deviation on residuals:')
-    print('CvE offset: '+str(np.round(medCvE,2))+r"% $\pm$ "+str(np.round(stdCvE,2))+'%')
-    print('OJH offset: '+str(np.round(medOH,2))+r"% $\pm$ "+str(np.round(stdOH,2))+'%')
-    print('ML offset: '+str(np.round(medML,2))+r"% $\pm$ "+str(np.round(stdML,2))+'%')
-    print('RH offset: '+str(np.round(medRH,2))+r"% $\pm$ "+str(np.round(stdRH,2))+'%')
+    print('CvE offset: '+str(np.round(medCvE,3))+r"% $\pm$ "+str(np.round(stdCvE,3))+'%')
+    print('OJH offset: '+str(np.round(medOH,3))+r"% $\pm$ "+str(np.round(stdOH,3))+'%')
+    print('ML offset: '+str(np.round(medML,3))+r"% $\pm$ "+str(np.round(stdML,3))+'%')
+    print('RH offset: '+str(np.round(medRH,3))+r"% $\pm$ "+str(np.round(stdRH,3))+'%')
     cc, button = close_plots()
     button.on_clicked(close)
 

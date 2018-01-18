@@ -16,6 +16,25 @@ import matplotlib.mlab as mlab
 from matplotlib.widgets import Button
 import astropy.io.fits as pyfits
 
+def get_sim():
+    '''
+    A function that creates a simple testing backround.
+    Returns:
+        ndarray: Simulated FFI of given shape.
+
+        ndarray: The background of the simulated FFI of given shape.
+    '''
+    shape = (2048,2048)
+
+    X, Y = np.meshgrid(np.arange(shape[1]),np.arange(shape[0]))
+    z = 1000.
+    sigma = 100.
+
+    sim = np.random.normal(z, 10., shape)
+
+    return sim, np.ones(shape)*z
+
+
 def load_files(ffi_type):
     '''
     A function that reads in the FFI testing data from inside the git repo.

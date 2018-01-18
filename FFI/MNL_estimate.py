@@ -274,7 +274,7 @@ def fit_background(ffi, size=128, itt_field=1, itt_ransac=500, plots_on=False):
 		plt.show()
 
 	#Calling a Plane Model class
-	Model = cPlaneModel(order=2, weights=inlier_masks)
+	Model = cPlaneModel(order=0, weights=inlier_masks)
 	Fit = Model.fit(neighborhood)	#Fitting the data with the model
 	fit_coeffs = Fit.coeff
 
