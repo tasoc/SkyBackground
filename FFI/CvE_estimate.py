@@ -117,9 +117,6 @@ def fit_background(ffi, percentile=10, plots_on = False):
     # Taking the average between the two images
     bkg_est_unfilt = (ffi_smooth_yy + ffi_smooth_xx)/2.
 
-    #Smoothing the result using a median filter
-    bkg_est = circular_filter(bkg_est_unfilt, percentile=50, filter_type='percentile')
-
     return bkg_est
 
 if __name__ == '__main__':
