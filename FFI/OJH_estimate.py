@@ -168,8 +168,8 @@ if __name__ == '__main__':
 	fest.colorbar(est, label=r'$log_{10}$(Flux)')
 	aest.set_title('Background estimated with '+str(npts)+' squares of '+str(ribsize)+'x'+str(ribsize))
 
-    cc, button = close_plots()
-    button.on_clicked(close)
+	cc, button = close_plots()
+	button.on_clicked(close)
 
 	plt.show('all')
 	plt.close('all')
