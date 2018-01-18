@@ -7,6 +7,7 @@ Function for estimation of sky background in TESS Full Frame Images
 Includes a '__main__' for independent test runs on local machines.
 
 .. versionadded:: 1.0.0
+.. versionchanged:: 1.1
 
 .. codeauthor:: Mikkel Nørup Lund <mikkelnl@phys.au.dk>
 .. codeauthor:: Oliver James Hall <ojh251@student.bham.ac.uk>
@@ -24,6 +25,8 @@ from scipy import stats
 from statsmodels.nonparametric.kde import KDEUnivariate as KDE
 from sklearn import linear_model
 from pyqt_fit import kde
+
+from Functions import *
 
 class cPlaneModel:
 	def __init__(self,order=2,weights=None):
@@ -184,7 +187,7 @@ def fRANSAC(F, neighborhood, iterations):
 
 	return inlier_masks, coeffs
 
-def fit_background(ffi, size=128, itt_field=1, itt_ransac=500, plots_on=False):
+def fit_background(ffi, size=128, itt_field=1, itt_ransac=500, order=1, plots_on=False):
 	"""
 	Estimate the background of a Full Frame Image (FFI) using a number of steps:
 		-Split the FFI into sub-sections of width 'size'
@@ -204,6 +207,9 @@ def fit_background(ffi, size=128, itt_field=1, itt_ransac=500, plots_on=False):
 
 		itt_ransac (int): Default 500. The number of RANSAC fits to make to the
 			calculated modes across the full FFI.
+
+		order (int): Default: 1. The desired order of the polynomial to be fit
+			to the estimated background points.
 
 	    plots_on (bool): Default False. When True, it will plot an example of
 	        the method fitting to the first line of data on the first iteration
@@ -274,7 +280,7 @@ def fit_background(ffi, size=128, itt_field=1, itt_ransac=500, plots_on=False):
 		plt.show()
 
 	#Calling a Plane Model class
-	Model = cPlaneModel(order=0, weights=inlier_masks)
+	Model = cPlaneModel(order=order, weights=inlier_masks)
 	Fit = Model.fit(neighborhood)	#Fitting the data with the model
 	fit_coeffs = Fit.coeff
 
@@ -290,13 +296,43 @@ if __name__ == '__main__':
 	ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
 	ffi_type = ffis[1]
 
-	ffi, bkg = load_files(ffi_type)
+	# ffi, bkg = load_files(ffi_type)
+	ffi, bkg = get_sim()
 
 	'''Program starts here:'''
 	size = 128   		#Number of blocks to cut the ffi into
 	itt_field = 1   	#Number of iterations of ransac fitting to each box
 	itt_ransac = 500	#Number of iterations of ransac fitting to modes
+	order = 0			#Order of polynomial to be fit
 	plots_on = True		#Will display plots if True
 
-	bkg_est = fit_background(ffi,\
-	 				size, itt_field, itt_ransac, plots_on)
+	est_bkg = fit_background(ffi,\
+	 				size, itt_field, itt_ransac, order, plots_on)
+
+	'''Plotting: all'''
+	print('The plots are up!')
+	fig, ax = plt.subplots()
+	im = ax.imshow(np.log10(ffi),cmap='Blues_r', origin='lower')
+	fig.colorbar(im,label=r'$log_{10}$(Flux)')
+	ax.set_title(ffi_type)
+
+	fdiff, adiff = plt.subplots()
+	diff = adiff.imshow(np.log10(est_bkg) - np.log10(bkg), origin='lower')
+	fdiff.colorbar(diff, label='Estimated Bkg - True Bkg (both in log10 space)')
+	adiff.set_title('Estimated bkg - True bkg')
+
+	fest, aest = plt.subplots()
+	est = aest.imshow(np.log10(est_bkg), cmap='Blues_r', origin='lower')
+	fest.colorbar(est, label=r'$log_{10}$(Flux)')
+	aest.set_title('Background estimate')
+
+	cc, button = close_plots()
+	button.on_clicked(close)
+
+	resML = est_bkg - bkg
+	medML = np.median(100*resML/bkg)
+	stdML = np.std(100*resML/bkg)
+	print('ML offset: '+str(np.round(medML,3))+r"% $\pm$ "+str(np.round(stdML,3))+'%')
+
+	plt.show('all')
+	plt.close('all')
