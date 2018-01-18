@@ -7,7 +7,7 @@ Function fo restimation of sky background in TESS Full Frame Images
 Includes a '__main__' for independent test runs on local machines.
 
 .. versionadded:: 1.0.0
-.. versionchanged:: 1.1
+.. versionchanged:: 1.2
 
 .. codeauthor:: Oliver James Hall <ojh251@student.bham.ac.uk>
 """
@@ -21,12 +21,14 @@ import glob
 
 import numpy as np
 from scipy import interpolate
+from scipy import stats
 
 from MNL_estimate import cPlaneModel
+from MNL_estimate import fRANSAC
 from Functions import *
 
 
-def fit_background(ffi, ribsize=8, nside=10, plots_on=False):
+def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, order=1, plots_on=False):
 	"""
 	Estimate the background of a Full Frame Image (FFI).
 	This method employs basic principles from two previous works:
@@ -47,6 +49,12 @@ def fit_background(ffi, ribsize=8, nside=10, plots_on=False):
 
 		nside (int): Default: 100. The number of points a side to evaluate the
 			background for, not consider additional points for corners and edges.
+
+		itt_ransac (int): Default 500. The number of RANSAC fits to make to the
+			calculated modes across the full FFI.
+
+		order (int): Default: 1. The desired order of the polynomial to be fit
+			to the estimated background points.
 
 		plots_on (bool): Default False. A boolean parameter. When True, it will show
 			a plot indicating the location of the background squares across the image.
@@ -78,14 +86,14 @@ def fit_background(ffi, ribsize=8, nside=10, plots_on=False):
 	xend = perc*xlen
 	yend = perc*xlen
 
-	xlocs_left = np.linspace(superx, xend-superx, nsuper)
-	ylocs_left = np.linspace(supery, yend-supery, nsuper)
+	xlocs_left = np.linspace(superx, xend-superx, int(nsuper))
+	ylocs_left = np.linspace(supery, yend-supery, int(nsuper))
 
-	xlocs_right = np.linspace(xlen-xend+superx, xlen-superx, nsuper)
-	ylocs_right = np.linspace(ylen-yend+supery, ylen-supery, nsuper)
+	xlocs_right = np.linspace(xlen-xend+superx, xlen-superx, int(nsuper))
+	ylocs_right = np.linspace(ylen-yend+supery, ylen-supery, int(nsuper))
 
-	xlocs_mid = np.linspace(xend,xlen-xend,nreg)
-	ylocs_mid = np.linspace(yend,ylen-yend,nreg)
+	xlocs_mid = np.linspace(xend,xlen-xend,int(nreg))
+	ylocs_mid = np.linspace(yend,ylen-yend,int(nreg))
 
 	xx = np.append(xlocs_mid, [xlocs_left, xlocs_right])
 	yy = np.append(ylocs_mid, [ylocs_left,ylocs_right])
@@ -96,14 +104,19 @@ def fit_background(ffi, ribsize=8, nside=10, plots_on=False):
 	bkg_field = np.zeros_like(X.ravel())
 	hr = int(ribsize/2)
 
-	#Calculating Buzasi+15 background inside masked areas
+	#Calculating the KDE and consequent mode inside masked ares
 	for idx, (xx, yy) in enumerate(zip(X.ravel(), Y.ravel())):
 		y = int(yy)
 		x = int(xx)
-		ffi_eval = ffi[y-hr:y+hr+1, x-hr:x+hr+1]	#Adding the +1 to make the selection even
-		bkg_field[idx] = np.nanmedian(ffi_eval[ffi_eval < np.nanpercentile(ffi_eval,[20])])
-		mask[y-hr:y+hr+1, x-hr:x+hr+1] = 1			#Saving the evaluated location in a mask
+		ffi_eval = ffi[y-hr:y+hr+1, x-hr:x+hr+1] #Adding the +1 to make the selection even
 
+		#Building a KDE on the data
+		kernel = stats.gaussian_kde(ffi_eval.flatten(),bw_method='scott')
+		alpha = np.linspace(ffi_eval.min(), ffi_eval.max(), 10000)
+
+		#Calculate the optimal value of the mode from the KDE
+		bkg_field[idx] = alpha[np.argmax(kernel(alpha))]
+		mask[y-hr:y+hr+1, x-hr:x+hr+1] = 1			#Saving the evaluated location in a mask
 
 	#Plotting the ffi with measurement locations shown
 	if plots_on:
@@ -121,8 +134,15 @@ def fit_background(ffi, ribsize=8, nside=10, plots_on=False):
 	neighborhood[:, 1] = Y.flatten()
 	neighborhood[:, 2] = bkg_field
 
+	#Getting the inlier masks with RANSAC to expel outliers
+	inlier_masks, coeffs = fRANSAC(modes, neighborhood, itt_ransac)
+
+	if plots_on:
+		fig = corner.corner(coffs, labels=['m','c'])
+		plt.show()
+		
 	#Setting up the Plane Model Class
-	Model = cPlaneModel(order=2, weights=None)
+	Model = cPlaneModel(order=order, weights=inlier_masks)
 	Fit = Model.fit(neighborhood)
 	fit_coeffs = Fit.coeff
 
@@ -141,15 +161,18 @@ if __name__ == '__main__':
 	nside = 25
 	npts = nside**2
 	ribsize = 8
+	itt_ransac = 500
+	order = 1
 
 	# Load file:
 	ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
 	ffi_type = ffis[1]
 
 	ffi, bkg = load_files(ffi_type)
+	# ffi, bkg = get_sim()
 
 	#Get background
-	est_bkg = fit_background(ffi, ribsize, nside, plots_on)
+	est_bkg = fit_background(ffi, ribsize, nside, itt_ransac, order, plots_on)
 
 	'''Plotting: all'''
 	print('The plots are up!')
@@ -168,8 +191,13 @@ if __name__ == '__main__':
 	fest.colorbar(est, label=r'$log_{10}$(Flux)')
 	aest.set_title('Background estimated with '+str(npts)+' squares of '+str(ribsize)+'x'+str(ribsize))
 
-    cc, button = close_plots()
-    button.on_clicked(close)
+	cc, button = close_plots()
+	button.on_clicked(close)
+
+	resOJH = est_bkg - bkg
+	medOH = np.median(100*resOJH/bkg)
+	stdOH = np.std(100*resOJH/bkg)
+	print('OJH offset: '+str(np.round(medOH,3))+r"% $\pm$ "+str(np.round(stdOH,3))+'%')
 
 	plt.show('all')
 	plt.close('all')

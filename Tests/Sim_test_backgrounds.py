@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
-Tests the 4 different types of background estimation for FFIs, and returns
-some simple metrics on their quality.
+Tests the 4 different types of background estimation on simulated data of
+increasing complexity, while outputting useful metrics.
 
 .. codeauthor:: Oliver James Hall <ojh251@student.bham.ac.uk>
 """
@@ -27,10 +27,7 @@ from Functions import *
 if __name__ == "__main__":
     plt.close('all')
 
-    # Load file:
-    ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
-    ffi_type = ffis[0]
-    ffi, bkg = load_files(ffi_type)
+    ffi, bkg = get_sim()
 
     print('fitting ML')
     ML = MLfit_bkg(ffi)
@@ -39,19 +36,19 @@ if __name__ == "__main__":
     print('fitting RH')
     RH  = RHfit_bkg(ffi)
     print('fitting CvE')
-    CvE = CEfit_bkg(ffi)
+    CvE = CEfit_bkg(ffi, percentile=50)
 
-    stdML = np.std(ML-bkg)
-    stdOJH = np.std(OJH-bkg)
-    stdRH  = np.std(RH-bkg)
-    stdCvE = np.std(CvE-bkg)
+    resML = ML-bkg
+    resOJH = OJH-bkg
+    resRH  = RH-bkg
+    resCvE = CvE-bkg
 
     '''Plotting: all'''
     plt.close('all')
     fig, ax = plt.subplots()
     im = ax.imshow(np.log10(ffi),cmap='Blues_r', origin='lower')
     fig.colorbar(im,label=r'$log_{10}$(Flux)')
-    ax.set_title(ffi_type)
+    ax.set_title('simulated white gauss')
 
     fC, aC = plt.subplots()
     diffC = aC.imshow(np.log10(CvE) - np.log10(bkg), origin='lower')
@@ -73,6 +70,21 @@ if __name__ == "__main__":
     fML.colorbar(diffML, label=r'$log_{10}$(Flux)')
     aML.set_title('ML_estimate | Estimated bkg - True bkg')
 
+    fres, ares = plt.subplots(4,sharex=True)
+    ares[0].plot(resML.ravel()[::2048],alpha=.4,linewidth=1,marker='v')
+    ares[0].set_title('ML method')
+    ares[0].axhline(0.,c='r')
+    ares[1].plot(resCvE.ravel()[::2048],alpha=.4,linewidth=1,marker='v')
+    ares[1].set_title('CvE method')
+    ares[1].axhline(0.,c='r')
+    ares[2].plot(resOJH.ravel()[::2048],alpha=.4,linewidth=1,marker='v')
+    ares[2].set_title('OJH method')
+    ares[2].axhline(0.,c='r')
+    ares[3].plot(resRH.ravel()[::2048],alpha=.4,linewidth=1,marker='v')
+    ares[3].set_title('RH method')
+    ares[3].axhline(0.,c='r')
+    fres.tight_layout()
+
     fhist, ahist = plt.subplots(2,2, sharex=True)
     ahist[0,0].hist((CvE-bkg).ravel(),histtype='step',bins=int(np.sqrt(len(bkg.ravel()))))
     ahist[1,0].hist((OJH-bkg).ravel(),histtype='step',bins=int(np.sqrt(len(bkg.ravel()))))
@@ -85,18 +97,27 @@ if __name__ == "__main__":
     ahist[1,1].set_title('Histogram of residuals for ML')
     ahist[1,1].set_xlabel('Background Estimate - True Background')
 
-    ahist[0,0].axvline(0.)
-    ahist[1,0].axvline(0.)
-    ahist[0,1].axvline(0.)
-    ahist[1,1].axvline(0.)
+    ahist[0,0].axvline(0.,c='r')
+    ahist[1,0].axvline(0.,c='r')
+    ahist[0,1].axvline(0.,c='r')
+    ahist[1,1].axvline(0.,c='r')
     fhist.tight_layout()
 
-    print('Standard deviations on all 3 residuals:')
-    print('CvE: '+str(stdCvE)+' == '+str(np.round(100*stdCvE/np.mean(bkg),2))+'% of mean')
-    print('OJH: '+str(stdOJH)+' == '+str(np.round(100*stdOJH/np.mean(bkg),2))+'% of mean')
-    print('RH: '+str(stdRH)+' == '+str(np.round(100*stdRH/np.mean(bkg),2))+'% of mean')
-    print('ML: '+str(stdML)+' == '+str(np.round(100*stdML/np.mean(bkg),2))+'% of mean')
+    percoffset = 100*resCvE/bkg
+    medCvE = np.median(100*resCvE/bkg)
+    stdCvE = np.std(100*resCvE/bkg)
+    medOH = np.median(100*resOJH/bkg)
+    stdOH = np.std(100*resOJH/bkg)
+    medRH = np.median(100*resRH/bkg)
+    stdRH = np.std(100*resRH/bkg)
+    medML = np.median(100*resML/bkg)
+    stdML = np.std(100*resML/bkg)
 
+    print('Median offset & standard deviation on residuals:')
+    print('CvE offset: '+str(np.round(medCvE,3))+r"% $\pm$ "+str(np.round(stdCvE,3))+'%')
+    print('OJH offset: '+str(np.round(medOH,3))+r"% $\pm$ "+str(np.round(stdOH,3))+'%')
+    print('ML offset: '+str(np.round(medML,3))+r"% $\pm$ "+str(np.round(stdML,3))+'%')
+    print('RH offset: '+str(np.round(medRH,3))+r"% $\pm$ "+str(np.round(stdRH,3))+'%')
     cc, button = close_plots()
     button.on_clicked(close)
 
