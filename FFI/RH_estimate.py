@@ -7,7 +7,7 @@ Function for estimation of sky background in TESS Full Frame Images.
 Includes a '__main__' for independent test runs on local machines.
 
 .. versionadded:: 1.0.0
-.. versionchanged:: 1.0.2
+.. versionchanged:: 1.1
 
 Notes: Copied over from TASOC/photometry/backgrounds.py [15/01/18]
 
@@ -25,6 +25,7 @@ import astropy.io.fits as pyfits
 from photutils import Background2D, SExtractorBackground
 from astropy.stats import SigmaClip
 
+from Functions import *
 
 def fit_background(ffi):
     """
@@ -56,6 +57,12 @@ def fit_background(ffi):
             mask=mask,
             exclude_percentile=50)
 
+    bkg_est = bkg.background
+
+    #Smoothing the background using a median filter
+    
+
+
     return bkg.background
 
 
@@ -65,19 +72,9 @@ if __name__ == '__main__':
     # Read in data
     ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
     ffi_type = ffis[0]
-    sfile = glob.glob('../data/FFI/'+ffi_type+'.fits')[0]
-    bgfile = glob.glob('../data/FFI/backgrounds_'+ffi_type+'.fits')[0]
 
-    try:
-        hdulist = pyfits.open(sfile)
-        bkglist = pyfits.open(bgfile)
-
-    except IOError:
-        print('File not located correctly.')
-        exit()
-
-    ffi = hdulist[0].data
-    bkg = bkglist[0].data
+    #ffi, bkg = load_files(ffi_type)
+    ffi, bkg = get_sim()
 
     #Run background estimation
     est_bkg = fit_background(ffi)
@@ -98,6 +95,14 @@ if __name__ == '__main__':
     est = aest.imshow(np.log10(est_bkg), cmap='Blues_r', origin='lower')
     fest.colorbar(est, label=r'$log_{10}$(Flux)')
     aest.set_title('Background estimated using the RH_estimate method')
+
+    cc, button = close_plots()
+    button.on_clicked(close)
+
+    resRH = est_bkg - bkg
+    medRH = np.median(100*resRH/bkg)
+    stdRH = np.std(100*resRH/bkg)
+    print('RH offset: '+str(np.round(medRH,3))+r"% $\pm$ "+str(np.round(stdRH,3))+'%')
 
     plt.show('all')
     plt.close('all')
