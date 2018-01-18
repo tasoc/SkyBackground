@@ -25,7 +25,7 @@ from PyAstronomy import pyasl
 
 from Functions import *
 
-def fit_background(ffi, plots_on = False):
+def fit_background(ffi, percentile=10, plots_on = False):
     """
     Estimate the background of a Full Frame Image (FFI) by treating each line of
     data as a spectroscopic spectrum and fitting to the background accordingly.
@@ -34,6 +34,8 @@ def fit_background(ffi, plots_on = False):
 
     Parameters:
         ffi (ndarray): A single TESS Full Frame Image in the form of a 2D array.
+
+        percentile (int): Default 10. The percentile value taken as the continuum value.
 
         plots_on (bool): Default False. When True, it will plot an example of
             the method fitting to the first line of data on the first iteration
@@ -73,9 +75,13 @@ def fit_background(ffi, plots_on = False):
         y_msky = ffi[i,::]      #All X values for Y = i
         x_msky = ffi[::,i]      #All Y values for X = i
 
-        for h in range(nbin-1):     #Get the minimum values in each bin
-            min_vecx[h] = np.min(x_msky[int_nbin_vec[h]:int_nbin_vec[h+1]])
-            min_vecy[h] = np.min(y_msky[int_nbin_vec[h]:int_nbin_vec[h+1]])
+        # for h in range(nbin-1):     #Get the minimum values in each bin
+        #     min_vecx[h] = np.min(x_msky[int_nbin_vec[h]:int_nbin_vec[h+1]])
+        #     min_vecy[h] = np.min(y_msky[int_nbin_vec[h]:int_nbin_vec[h+1]])
+
+        for h in range(nbin-1):     #Get the value of the chosen percentile in each bin
+            min_vecx[h] = np.nanpercentile(x_msky[int_nbin_vec[h]:int_nbin_vec[h+1]],[percentile])
+            min_vecy[h] = np.nanpercentile(y_msky[int_nbin_vec[h]:int_nbin_vec[h+1]],[percentile])
 
         nbin_vec = nbin_vec[0:nbin-1]   #Adjusting nbin_vec to the same size as min_vec for interpolation
 
@@ -95,7 +101,7 @@ def fit_background(ffi, plots_on = False):
             if (i == 0):
                 #Showing data with continuum estimation from method
                 fig, ax = plt.subplots()
-                ax.set_ylim(130000., 90000.)
+                # ax.set_ylim(130000., 90000.)
                 ax.set_title('Low end of FFI data sliced in y with continuum estimation shown')
                 ax.plot(ndim_vec, y_msky, 'r-', label='FFI data')
                 ax.plot(ndim_vec, y_min_vec_int, 'b-', label='Binned estimate')
@@ -109,14 +115,18 @@ def fit_background(ffi, plots_on = False):
     ffi_smooth_xx = scipy.ndimage.gaussian_filter(ffi_smooth_x, kern_px/(2*np.sqrt(2*np.log(2))))
 
     # Taking the average between the two images
-    bkg_est = (ffi_smooth_yy + ffi_smooth_xx)/2.
+    bkg_est_unfilt = (ffi_smooth_yy + ffi_smooth_xx)/2.
+
+    #Smoothing the result using a median filter
+    bkg_est = circular_filter(bkg_est_unfilt, percentile=50, filter_type='percentile')
 
     return bkg_est
 
 if __name__ == '__main__':
     # Set up parameters
     plt.close('all')
-    plots_on = False
+    plots_on = True
+    percentile = 50
 
     # Read in data
     ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
@@ -125,7 +135,7 @@ if __name__ == '__main__':
     ffi, bkg = get_sim()
 
     # Run background estimation
-    est_bkg = fit_background(ffi, plots_on)
+    est_bkg = fit_background(ffi, percentile, plots_on)
 
     # Plot background difference
     fig, ax = plt.subplots()
@@ -133,22 +143,15 @@ if __name__ == '__main__':
     fig.colorbar(im,label=r'$log_{10}$(Flux)')
     ax.set_title(ffi_type)
 
-    fbf, abf = plt.subplots()
-    bgf = abf.imshow(np.log10(est_bkg), cmap='Blues_r', origin='lower')
-    fbf.colorbar(bgf, label=r'$log_{10}$(Flux)')
-    abf.set_title('Background averaged across evaluations in x and y')
-
-    ftru, atru = plt.subplots()
-    btru = atru.imshow(np.log10(bkg), cmap='Blues_r', origin='lower')
-    ftru.colorbar(btru, label=r'$log_{10}$(Flux)')
-    atru.set_xlabel('Pixel #')
-    atru.set_ylabel('Pixel #')
-    atru.set_title('True background of simulated data')
-
     fdiff, adiff = plt.subplots()
     diff = adiff.imshow(np.log10(est_bkg) - np.log10(bkg), origin='lower')
     fdiff.colorbar(diff, label='Estimated Bkg - True Bkg (both in log10 space)')
     adiff.set_title('Estimated bkg - True bkg')
+
+    fest, aest = plt.subplots()
+    est = aest.imshow(np.log10(est_bkg), cmap='Blues_r', origin='lower')
+    fest.colorbar(est, label=r'$log_{10}$(Flux)')
+    aest.set_title('Background estimated using the CvE method')
 
     cc, button = close_plots()
     button.on_clicked(close)

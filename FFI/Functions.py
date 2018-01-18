@@ -18,7 +18,7 @@ import astropy.io.fits as pyfits
 import scipy.ndimage as nd
 
 
-def circular_filter(data, diam=10, percentile=10, filter_type='percentile'):
+def circular_filter(data, diam=15, percentile=10, filter_type='percentile'):
     '''
     A function that runs a filter of choice using a circular footprint of a
     diameter determined by the user.
@@ -26,10 +26,11 @@ def circular_filter(data, diam=10, percentile=10, filter_type='percentile'):
     Parameters:
         data (ndarray): An array containing the unsmoothed data.
 
-        diam (int): Default: 10. The desired diameter in pixels of the circular
+        diam (int): Default: 15. The desired diameter in pixels of the circular
             footprint.
 
         percentile (int): Default: 10. The desired percentile to use on the percentile
+            filter. If percentile is set to 50, it effectively functions as a median
             filter.
 
         filter_type (str): Default 'percentile'. Call 'minimum' for a minimum filter
