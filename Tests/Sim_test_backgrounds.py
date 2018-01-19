@@ -27,12 +27,12 @@ from Functions import *
 if __name__ == "__main__":
     plt.close('all')
 
-    ffi, bkg = get_sim()
+    ffi, bkg = get_sim(style='complex')
 
     print('fitting ML')
-    ML = MLfit_bkg(ffi)
+    ML = MLfit_bkg(ffi,order=3)
     print('fitting OJH')
-    OJH = OHfit_bkg(ffi)
+    OJH = OHfit_bkg(ffi,order=3)
     print('fitting RH')
     RH  = RHfit_bkg(ffi)
     print('fitting CvE')
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     fig, ax = plt.subplots()
     im = ax.imshow(np.log10(ffi),cmap='Blues_r', origin='lower')
     fig.colorbar(im,label=r'$log_{10}$(Flux)')
-    ax.set_title('simulated white gauss')
+    ax.set_title('simulated background')
 
     fC, aC = plt.subplots()
     diffC = aC.imshow(np.log10(CvE) - np.log10(bkg), origin='lower')

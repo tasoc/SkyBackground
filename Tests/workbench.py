@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
     #Normalising the bkg_stars component to be a 10% fraction
     bkg_stars = orig_stars/orig_stars.max()
-    bkg_stars *= 0.1
+    bkg_stars *= 0.05
     bkg_stars += 1
 
     #Defining the other components

@@ -16,6 +16,26 @@ import matplotlib.mlab as mlab
 from matplotlib.widgets import Button
 import astropy.io.fits as pyfits
 import scipy.ndimage as nd
+from tqdm import tqdm
+
+
+def get_gaussian(X, Y, A, (mux, muy), (sigma_x, sigma_y)):
+    '''
+    A simple function that returns a 2D gaussian.
+
+    Parameters:
+        X (ndarray): A numpy meshgrid
+        Y (ndarray): A numpy meshgrid
+        (mux, muy) (float64, float64): The position of the Gaussian in x and y
+            respecitvely.
+        (sigma_x, sigma_y) (float64, float64): The standard deviation of the Gaussian
+            in x and y respectively.
+
+    Returns:
+        ndarray: A 2D Gaussian on a meshgrid in the shape of the input X and Y.
+    '''
+    return  A   * np.exp(-0.5 * (mux - X)**2 / sigma_x**2) \
+                * np.exp(-0.5 * (muy- Y)**2 / sigma_y**2)
 
 
 def circular_filter(data, diam=15, percentile=10, filter_type='percentile'):
@@ -94,6 +114,7 @@ def get_sim(style):
         orig_stars = np.zeros(X.shape)
         locx = np.random.rand(nstars) * (shape[1]-1)    #Getting a random list of star positions
         locy = np.random.rand(nstars) * (shape[0]-1)
+        print('Building simulated background...')
         for s in tqdm(range(nstars)):           #Calculating the gaussian for each position
             height = np.random.exponential()*1
             w = 20
@@ -101,7 +122,7 @@ def get_sim(style):
 
         #Normalising the bkg_stars component to be a 10% fraction
         bkg_stars = orig_stars/orig_stars.max()
-        bkg_stars *= 0.1
+        bkg_stars *= 0.05
         bkg_stars += 1
 
         #Defining the other components
@@ -112,6 +133,7 @@ def get_sim(style):
         bkg = bkg_slope * bkg_gauss * bkg_stars
         sim = np.random.normal(conv, sigma, shape)
 
+        np.savetxt('complex_sim.txt',zip(bkg.ravel(),sim.ravel()))
 
     if style == 'flat':
         z = 1000        #height of the background
