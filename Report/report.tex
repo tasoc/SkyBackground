@@ -195,6 +195,33 @@ In conclusion, all four methods are able to recover a distribution of residuals 
 \end{figure}
 
 \section{Test 2: Noise Background + slope and crowding}
+The next stage of background estimator testing involves a more compliated background function. The background now consists of three components:
+
+\begin{itemize}
+\item A sloped background
+\item A large area of increased background level in the shape of 2D Gaussian (to function as a crowded local area)
+\item 2048 faint stars smoothed over before being added to the background (to function as unfocused stars)
+\end{itemize}
+
+The individual components, as well as the combined background and the simulated (star-less) FFI, can be seen in Figures \ref{fig:bkgcomponents} and \ref{fig:complexbkg}.
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{bkgcomponents}
+\caption{The various components used in the new complex background.}
+\label{fig:bkgcomponents}
+\end{figure}
+
+
+\begin{figure}[!ht]
+   \centering
+   \subfloat[][]{\includegraphics[width=.4\textwidth]{complexffi}}\quad
+   \subfloat[][]{\includegraphics[width=.4\textwidth]{complexbkg}}\\
+   \caption{Background without noise (for estimation evaluation) and with noise (on which the background is measured).
+   \label{fig:complexbkg}
+\end{figure}
+
+
 \subsection{CvE}
 \subsection{ML}
 \subsection{OJH}

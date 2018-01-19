@@ -33,8 +33,8 @@ def circular_filter(data, diam=15, percentile=10, filter_type='percentile'):
             filter. If percentile is set to 50, it effectively functions as a median
             filter.
 
-        filter_type (str): Default 'percentile'. Call 'minimum' for a minimum filter
-            or 'percentile' for a percentile filter.
+        filter_type (str): Default 'percentile'. Call 'minimum' for a minimum filter,
+            'percentile' for a percentile filter or 'maximum' for a maximum filter.
 
     Returns:
         ndarray: An array of the same shape as the input data containing the data
@@ -54,28 +54,71 @@ def circular_filter(data, diam=15, percentile=10, filter_type='percentile'):
                 footprint=circle)
 
     if filter_type == 'minimum':
-        filt = nd.filters.minimum_filter(smol, footprint=circle)
+        filt = nd.filters.minimum_filter(data, footprint=circle)
+
+    if filter_type == 'maximum':
+        filt = nd.filters.maximum_filter(data, footprint=circle)
+
+    else:
+        print('Unfiltered.')
+        return data
 
     return filt
 
 
-def get_sim():
+def get_sim(style):
     '''
     A function that creates a simple testing backround.
+
+    Parameters:
+        style (str): Either 'flat' for a flat gaussian noise background, 'complex'
+            for a background that includes slopes and crowding, and 'full' for a full
+            FFI simulation.
+
     Returns:
         ndarray: Simulated FFI of given shape.
 
         ndarray: The background of the simulated FFI of given shape.
     '''
     shape = (2048,2048)
-
     X, Y = np.meshgrid(np.arange(shape[1]),np.arange(shape[0]))
-    z = 1000.
-    sigma = 100.
 
-    sim = np.random.normal(z, 10., shape)
+    if style == 'complex':
+        a = -1.05    #Slope on spiffy bkg
+        b = -3.55    #Slope on spiffy bkg
 
-    return sim, np.ones(shape)*z
+        z = 90000    #Median height of spiffy background
+        sigma = 2000 #Sigma is std on spiffy bkg (2% spread)
+
+        nstars = 2000   #Number of contaminant stars
+        orig_stars = np.zeros(X.shape)
+        locx = np.random.rand(nstars) * (shape[1]-1)    #Getting a random list of star positions
+        locy = np.random.rand(nstars) * (shape[0]-1)
+        for s in tqdm(range(nstars)):           #Calculating the gaussian for each position
+            height = np.random.exponential()*1
+            w = 20
+            orig_stars +=  get_gaussian(X, Y, 1, (locx[s], locy[s]),(w, w))
+
+        #Normalising the bkg_stars component to be a 10% fraction
+        bkg_stars = orig_stars/orig_stars.max()
+        bkg_stars *= 0.1
+        bkg_stars += 1
+
+        #Defining the other components
+        bkg_slope = a*X + b*Y + z
+        bkg_gauss = get_gaussian(X, Y, 0.2, (650,1650), (600,400)) + 1
+
+        #Combining the backgrounds and adding noise
+        bkg = bkg_slope * bkg_gauss * bkg_stars
+        sim = np.random.normal(conv, sigma, shape)
+
+
+    if style == 'flat':
+        z = 1000        #height of the background
+        sigma = 100     #Error on the background
+
+        sim = np.random.normal(z, sigma, shape)
+        return sim, np.ones(shape)*z
 
 
 def load_files(ffi_type):
