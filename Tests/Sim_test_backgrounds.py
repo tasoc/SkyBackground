@@ -15,6 +15,7 @@ from scipy import interpolate
 
 import sys
 import glob
+import os
 
 sys.path.append('../FFI/')
 from CvE_estimate import fit_background as CEfit_bkg
@@ -27,7 +28,13 @@ from Functions import *
 if __name__ == "__main__":
     plt.close('all')
 
-    ffi, bkg = get_sim(style='complex')
+    if os.path.isfile('complex_sim.txt'):
+        ffi, bkg = np.genfromtxt('complex_sim.txt').T
+        ffi.reshape(2048,2048)
+        bkg.reshape(2048,2048)
+
+    else:
+        ffi, bkg = get_sim(style='complex')
 
     print('fitting ML')
     ML = MLfit_bkg(ffi,order=3)

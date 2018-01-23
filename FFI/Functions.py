@@ -131,9 +131,10 @@ def get_sim(style):
 
         #Combining the backgrounds and adding noise
         bkg = bkg_slope * bkg_gauss * bkg_stars
-        sim = np.random.normal(conv, sigma, shape)
+        sim = np.random.normal(bkg, sigma, shape)
 
         np.savetxt('complex_sim.txt',zip(bkg.ravel(),sim.ravel()))
+        return sim, bkg
 
     if style == 'flat':
         z = 1000        #height of the background
