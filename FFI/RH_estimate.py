@@ -60,7 +60,7 @@ def fit_background(ffi):
     bkg_est_unfilt = bkg.background
 
     #Smoothing the background using a percentile filter
-    bkg_est = circular_filter(bkg_est_unfilt, diam=15, percentile=50, filter_type='percentile')
+    bkg_est = circular_filter(bkg_est_unfilt, diam=15, percentile=50)
 
     return bkg_est
 

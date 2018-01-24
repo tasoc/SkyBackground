@@ -180,7 +180,7 @@ if __name__ == '__main__':
 	ffi_type = ffis[0]
 
 	# ffi, bkg = load_files(ffi_type)
-	ffi, bkg = get_sim()
+	ffi, bkg = get_sim(style='flat')
 
 	#Get background
 	est_bkg = fit_background(ffi, ribsize, nside, itt_ransac, order, plots_on)

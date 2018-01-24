@@ -80,10 +80,6 @@ def circular_filter(data, diam=15, percentile=10, filter_type='percentile'):
     if filter_type == 'maximum':
         filt = nd.filters.maximum_filter(data, footprint=circle)
 
-    else:
-        print('Unfiltered.')
-        return data
-
     return filt
 
 def get_sim(style='flat'):
@@ -108,7 +104,8 @@ def get_sim(style='flat'):
 
     if style == 'complex':
         #If the background has already been generated on this local repository, read in
-        if os.path.isfile('complex_sim.tar.gz'):
+        if os.path.isfile('../Tests/complex_sim.fits'):
+            print('hello')
             sim = pyfits.open('complex_sim.fits')[0].data
             bkg = pyfits.open('complex_sim_bkg.fits')[0].data
 
@@ -151,7 +148,7 @@ def get_sim(style='flat'):
 
     if style == 'flat':
         z = 1000        #height of the background
-        sigma = 100     #Error on the background
+        sigma = 10     #Error on the background
 
         sim = np.random.normal(z, sigma, shape)
         return sim, np.ones(shape)*z
