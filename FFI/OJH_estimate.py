@@ -18,6 +18,7 @@ from matplotlib.widgets import Button
 import astropy.io.fits as pyfits
 import sys
 import glob
+import corner
 
 import numpy as np
 from scipy import interpolate
@@ -123,7 +124,6 @@ def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, order=1, plots_on=F
 		fig, ax = plt.subplots()
 		im = ax.imshow(np.log10(ffi),cmap='Blues_r', origin='lower')
 		fig.colorbar(im,label=r'$log_{10}$(Flux)')
-		ax.set_title(ffi_type)
 		ax.contour(mask, c='r', N=1)
 		plt.show()
 
@@ -138,7 +138,7 @@ def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, order=1, plots_on=F
 	inlier_masks, coeffs = fRANSAC(bkg_field, neighborhood, itt_ransac)
 
 	if plots_on:
-		fig = corner.corner(coffs, labels=['m','c'])
+		fig = corner.corner(coeffs, labels=['m','c'])
 		plt.show()
 
 	#Setting up the Plane Model Class
@@ -168,8 +168,8 @@ if __name__ == '__main__':
 	ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
 	ffi_type = ffis[0]
 
-	ffi, bkg = load_files(ffi_type)
-	# ffi, bkg = get_sim()
+	# ffi, bkg = load_files(ffi_type)
+	ffi, bkg = get_sim()
 
 	#Get background
 	est_bkg = fit_background(ffi, ribsize, nside, itt_ransac, order, plots_on)
@@ -179,7 +179,6 @@ if __name__ == '__main__':
 	fig, ax = plt.subplots()
 	im = ax.imshow(np.log10(ffi),cmap='Blues_r', origin='lower')
 	fig.colorbar(im,label=r'$log_{10}$(Flux)')
-	ax.set_title(ffi_type)
 
 	fdiff, adiff = plt.subplots()
 	diff = adiff.imshow(np.log10(est_bkg) - np.log10(bkg), origin='lower')

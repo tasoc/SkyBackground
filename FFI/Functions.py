@@ -88,7 +88,7 @@ def circular_filter(data, diam=15, percentile=10, filter_type='percentile'):
     return filt
 
 
-def get_sim(style):
+def get_sim(style='flat'):
     '''
     A function that creates a simple testing backround.
 
@@ -98,9 +98,9 @@ def get_sim(style):
     Every subsequent call will read it in.
 
     Parameters:
-        style (str): Either 'flat' for a flat gaussian noise background, 'complex'
-            for a background that includes slopes and crowding, and 'full' for a full
-            FFI simulation.
+        style (str): Default 'flat'. Either 'flat' for a flat gaussian noise background,
+            'complex' for a background that includes slopes and crowding, and 'full'
+            for a full FFI simulation.
 
     Returns:
         ndarray: Simulated FFI of given shape.
