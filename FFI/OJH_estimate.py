@@ -70,32 +70,43 @@ def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, order=1, plots_on=F
 	if ffi.shape[0] < 2048:	#If FFI file is a superstamp, reduce ribsize
 		ribsize = 4
 
+	#The width of the image
 	xlen = ffi.shape[1]
 	ylen = ffi.shape[0]
 
+	#The percentage of pixels either side to be sampled in higher density
 	perc = 0.1
 
+	#The pixel step difference between sampling points
 	lx = xlen/(nside+2)
 	ly = ylen/(nside+2)
 
+	#The pixel step difference between sampling points in areas of higher density
 	superx = lx/2
 	supery = ly/2
 
+	#The number of higher sampling points in each area of higher density
 	nsuper = perc*nside*2
+	#The number of regular sampling points in the image
 	nreg = (1-2*perc)*nside
 
+	#The ending point in x and y of the higher density ares
 	xend = perc*xlen
 	yend = perc*xlen
 
+	#Define sampling locations in areas of higher density at low x and y
 	xlocs_left = np.linspace(superx, xend-superx, int(nsuper))
 	ylocs_left = np.linspace(supery, yend-supery, int(nsuper))
 
+	#Define sampling locations in areas of higher density at high x and y
 	xlocs_right = np.linspace(xlen-xend+superx, xlen-superx, int(nsuper))
 	ylocs_right = np.linspace(ylen-yend+supery, ylen-supery, int(nsuper))
 
+	#Define sampling locations in the rest of the image
 	xlocs_mid = np.linspace(xend,xlen-xend,int(nreg))
 	ylocs_mid = np.linspace(yend,ylen-yend,int(nreg))
 
+	#Combine all three location arrays into a single array, create a corersponding meshgrid
 	xx = np.append(xlocs_mid, [xlocs_left, xlocs_right])
 	yy = np.append(ylocs_mid, [ylocs_left,ylocs_right])
 	X, Y = np.meshgrid(xx, yy)
@@ -127,14 +138,14 @@ def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, order=1, plots_on=F
 		ax.contour(mask, c='r', N=1)
 		plt.show()
 
-	print('Fitting a 2D polynomial using the cPlaneModel')
+	#Fitting a 2D polynomial using the cPlaneModel class
 	#Preparing the data
 	neighborhood = np.zeros([len(bkg_field),3])
 	neighborhood[:, 0] = X.flatten()
 	neighborhood[:, 1] = Y.flatten()
 	neighborhood[:, 2] = bkg_field
 
-	#Getting the inlier masks with RANSAC to expel outliers
+	#Getting the inlier masks with RANSAC to use as weights for fitting
 	inlier_masks, coeffs = fRANSAC(bkg_field, neighborhood, itt_ransac)
 
 	if plots_on:
