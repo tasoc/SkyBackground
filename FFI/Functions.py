@@ -17,6 +17,7 @@ from matplotlib.widgets import Button
 import astropy.io.fits as pyfits
 import scipy.ndimage as nd
 from tqdm import tqdm
+import os
 
 
 def get_gaussian(X, Y, A, (mux, muy), (sigma_x, sigma_y)):
@@ -90,6 +91,11 @@ def get_sim(style):
     '''
     A function that creates a simple testing backround.
 
+    Note: The 'complex' background has a random element to it, so can not be stored
+    in Git versin control. The first call of this function on a local respository
+    will create the file and save it as a tar.gz.
+    Every subsequent call will read it in.
+
     Parameters:
         style (str): Either 'flat' for a flat gaussian noise background, 'complex'
             for a background that includes slopes and crowding, and 'full' for a full
@@ -104,36 +110,44 @@ def get_sim(style):
     X, Y = np.meshgrid(np.arange(shape[1]),np.arange(shape[0]))
 
     if style == 'complex':
-        a = -1.05    #Slope on spiffy bkg
-        b = -3.55    #Slope on spiffy bkg
+        #If the background has already been generated on this local repository, read in
+        if os.path.isfile('complex_sim.tar.gz'):
+            sim, bkg = np.genfromtxt('complex_sim.tar.gz').T
+            sim = sim.reshape(shape[0],shape[1])
+            bkg = bkg.reshape(shape[0],shape[1])
 
-        z = 90000    #Median height of spiffy background
-        sigma = 2000 #Sigma is std on spiffy bkg (2% spread)
+        else:
+            a = -1.05    #Slope on spiffy bkg
+            b = -3.55    #Slope on spiffy bkg
 
-        nstars = 2000   #Number of contaminant stars
-        orig_stars = np.zeros(X.shape)
-        locx = np.random.rand(nstars) * (shape[1]-1)    #Getting a random list of star positions
-        locy = np.random.rand(nstars) * (shape[0]-1)
-        print('Building simulated background...')
-        for s in tqdm(range(nstars)):           #Calculating the gaussian for each position
-            height = np.random.exponential()*1
-            w = 20
-            orig_stars +=  get_gaussian(X, Y, 1, (locx[s], locy[s]),(w, w))
+            z = 90000    #Median height of spiffy background
+            sigma = 2000 #Sigma is std on spiffy bkg (2% spread)
 
-        #Normalising the bkg_stars component to be a 10% fraction
-        bkg_stars = orig_stars/orig_stars.max()
-        bkg_stars *= 0.05
-        bkg_stars += 1
+            nstars = 2000   #Number of contaminant stars
+            orig_stars = np.zeros(X.shape)
+            locx = np.random.rand(nstars) * (shape[1]-1)    #Getting a random list of star positions
+            locy = np.random.rand(nstars) * (shape[0]-1)
+            print('Building simulated background...')
+            for s in tqdm(range(nstars)):           #Calculating the gaussian for each position
+                height = np.random.exponential()*1
+                w = 20
+                orig_stars +=  get_gaussian(X, Y, 1, (locx[s], locy[s]),(w, w))
 
-        #Defining the other components
-        bkg_slope = a*X + b*Y + z
-        bkg_gauss = get_gaussian(X, Y, 0.2, (650,1650), (600,400)) + 1
+            #Normalising the bkg_stars component to be a 10% fraction
+            bkg_stars = orig_stars/orig_stars.max()
+            bkg_stars *= 0.05
+            bkg_stars += 1
 
-        #Combining the backgrounds and adding noise
-        bkg = bkg_slope * bkg_gauss * bkg_stars
-        sim = np.random.normal(bkg, sigma, shape)
+            #Defining the other components
+            bkg_slope = a*X + b*Y + z
+            bkg_gauss = get_gaussian(X, Y, 0.2, (650,1650), (600,400)) + 1
 
-        np.savetxt('complex_sim.txt',zip(bkg.ravel(),sim.ravel()))
+            #Combining the backgrounds and adding noise
+            bkg = bkg_slope * bkg_gauss * bkg_stars
+            sim = np.random.normal(bkg, sigma, shape)
+
+            #Saving the file to a .tar.gz format to save space
+            np.savetxt('complex_sim.tar.gz',zip(bkg.ravel(),sim.ravel()))
         return sim, bkg
 
     if style == 'flat':

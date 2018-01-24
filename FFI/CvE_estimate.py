@@ -15,7 +15,6 @@ Includes a '__main__' for independent test runs on local machines.
 
 import matplotlib.pylab as plt
 import scipy
-import pyfits
 import glob
 
 import numpy as np
