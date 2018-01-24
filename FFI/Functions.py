@@ -93,7 +93,7 @@ def get_sim(style):
 
     Note: The 'complex' background has a random element to it, so can not be stored
     in Git versin control. The first call of this function on a local respository
-    will create the file and save it as a tar.gz.
+    will create the simulated ffi and background and save it as fits files.
     Every subsequent call will read it in.
 
     Parameters:
@@ -112,9 +112,8 @@ def get_sim(style):
     if style == 'complex':
         #If the background has already been generated on this local repository, read in
         if os.path.isfile('complex_sim.tar.gz'):
-            sim, bkg = np.genfromtxt('complex_sim.tar.gz').T
-            sim = sim.reshape(shape[0],shape[1])
-            bkg = bkg.reshape(shape[0],shape[1])
+            sim = pyfits.open('complex_sim.fits')[0].data
+            bkg = pyfits.open('complex_sim_bkg.fits')[0].data
 
         else:
             a = -1.05    #Slope on spiffy bkg
@@ -146,8 +145,11 @@ def get_sim(style):
             bkg = bkg_slope * bkg_gauss * bkg_stars
             sim = np.random.normal(bkg, sigma, shape)
 
-            #Saving the file to a .tar.gz format to save space
-            np.savetxt('complex_sim.tar.gz',zip(bkg.ravel(),sim.ravel()))
+            #Saving the sim and background to fits formats to save space
+            hdusim = pyfits.PrimaryHDU(sim)
+            hdubkg = pyfits.PrimaryHUD(bkg)
+            hduffi.writeto('complex_sim.fits')
+            hdubkg.writeto('complex_sim_bkg.fits')
         return sim, bkg
 
     if style == 'flat':
