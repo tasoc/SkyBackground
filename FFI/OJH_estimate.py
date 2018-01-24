@@ -135,12 +135,12 @@ def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, order=1, plots_on=F
 	neighborhood[:, 2] = bkg_field
 
 	#Getting the inlier masks with RANSAC to expel outliers
-	inlier_masks, coeffs = fRANSAC(modes, neighborhood, itt_ransac)
+	inlier_masks, coeffs = fRANSAC(bkg_field, neighborhood, itt_ransac)
 
 	if plots_on:
 		fig = corner.corner(coffs, labels=['m','c'])
 		plt.show()
-		
+
 	#Setting up the Plane Model Class
 	Model = cPlaneModel(order=order, weights=inlier_masks)
 	Fit = Model.fit(neighborhood)
@@ -166,7 +166,7 @@ if __name__ == '__main__':
 
 	# Load file:
 	ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
-	ffi_type = ffis[1]
+	ffi_type = ffis[0]
 
 	ffi, bkg = load_files(ffi_type)
 	# ffi, bkg = get_sim()

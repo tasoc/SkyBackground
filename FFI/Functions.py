@@ -18,6 +18,7 @@ import astropy.io.fits as pyfits
 import scipy.ndimage as nd
 from tqdm import tqdm
 import os
+import sys
 
 
 def get_gaussian(X, Y, A, (mux, muy), (sigma_x, sigma_y)):
@@ -184,7 +185,7 @@ def load_files(ffi_type):
 
     except IOError:
         print('File not located correctly.')
-        exit()
+        sys.exit()
 
     ffi = hdulist[0].data
     bkg = bkglist[0].data

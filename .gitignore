@@ -30,8 +30,6 @@ var/
 *.manifest
 *.spec
 
-#Files
-*.txt
 
 # Installer logs
 pip-log.txt
