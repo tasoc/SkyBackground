@@ -83,7 +83,6 @@ if __name__ == '__main__':
     fig, ax = plt.subplots()
     im = ax.imshow(np.log10(ffi),cmap='Blues_r', origin='lower')
     fig.colorbar(im,label=r'$log_{10}$(Flux)')
-    ax.set_title(ffi_type)
 
     fdiff, adiff = plt.subplots()
     diff = adiff.imshow(np.log10(est_bkg) - np.log10(bkg), origin='lower')

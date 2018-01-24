@@ -39,7 +39,6 @@ def get_gaussian(X, Y, A, (mux, muy), (sigma_x, sigma_y)):
     return  A   * np.exp(-0.5 * (mux - X)**2 / sigma_x**2) \
                 * np.exp(-0.5 * (muy- Y)**2 / sigma_y**2)
 
-
 def circular_filter(data, diam=15, percentile=10, filter_type='percentile'):
     '''
     A function that runs a filter of choice using a circular footprint of a
@@ -87,15 +86,12 @@ def circular_filter(data, diam=15, percentile=10, filter_type='percentile'):
 
     return filt
 
-
 def get_sim(style='flat'):
     '''
     A function that creates a simple testing backround.
 
-    Note: The 'complex' background has a random element to it, so can not be stored
-    in Git versin control. The first call of this function on a local respository
-    will create the simulated ffi and background and save it as fits files.
-    Every subsequent call will read it in.
+    Note: The 'complex' background has a random element to it. If you re-run the
+    code generation __do__not__commit__the__new__file!
 
     Parameters:
         style (str): Default 'flat'. Either 'flat' for a flat gaussian noise background,
@@ -148,8 +144,8 @@ def get_sim(style='flat'):
 
             #Saving the sim and background to fits formats to save space
             hdusim = pyfits.PrimaryHDU(sim)
-            hdubkg = pyfits.PrimaryHUD(bkg)
-            hduffi.writeto('complex_sim.fits')
+            hdubkg = pyfits.PrimaryHDU(bkg)
+            hdusim.writeto('complex_sim.fits')
             hdubkg.writeto('complex_sim_bkg.fits')
         return sim, bkg
 
@@ -159,7 +155,6 @@ def get_sim(style='flat'):
 
         sim = np.random.normal(z, sigma, shape)
         return sim, np.ones(shape)*z
-
 
 def load_files(ffi_type):
     '''
