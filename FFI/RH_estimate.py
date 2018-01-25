@@ -60,7 +60,7 @@ def fit_background(ffi):
     bkg_est_unfilt = bkg.background
 
     #Smoothing the background using a percentile filter
-    bkg_est = circular_filter(bkg_est_unfilt, diam=15, percentile=50, filter_type='percentile')
+    bkg_est = circular_filter(bkg_est_unfilt, diam=15, percentile=50)
 
     return bkg_est
 
@@ -83,7 +83,6 @@ if __name__ == '__main__':
     fig, ax = plt.subplots()
     im = ax.imshow(np.log10(ffi),cmap='Blues_r', origin='lower')
     fig.colorbar(im,label=r'$log_{10}$(Flux)')
-    ax.set_title(ffi_type)
 
     fdiff, adiff = plt.subplots()
     diff = adiff.imshow(np.log10(est_bkg) - np.log10(bkg), origin='lower')

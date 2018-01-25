@@ -18,6 +18,8 @@ from matplotlib.widgets import Button
 import astropy.io.fits as pyfits
 import sys
 import glob
+import corner
+from tqdm import tqdm
 
 import numpy as np
 from scipy import interpolate
@@ -69,34 +71,45 @@ def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, order=1, plots_on=F
 	if ffi.shape[0] < 2048:	#If FFI file is a superstamp, reduce ribsize
 		ribsize = 4
 
+	#The width of the image
 	xlen = ffi.shape[1]
 	ylen = ffi.shape[0]
 
+	#The percentage of pixels either side to be sampled in higher density
 	perc = 0.1
 
+	#The pixel step difference between sampling points
 	lx = xlen/(nside+2)
 	ly = ylen/(nside+2)
 
+	#The pixel step difference between sampling points in areas of higher density
 	superx = lx/2
 	supery = ly/2
 
+	#The number of higher sampling points in each area of higher density
 	nsuper = perc*nside*2
+	#The number of regular sampling points in the image
 	nreg = (1-2*perc)*nside
 
+	#The ending point in x and y of the higher density ares
 	xend = perc*xlen
 	yend = perc*xlen
 
-	xlocs_left = np.linspace(superx, xend-superx, int(nsuper))
-	ylocs_left = np.linspace(supery, yend-supery, int(nsuper))
+	#Define sampling locations in areas of higher density at low x and y
+	xlocs_left = np.linspace(0., xend-superx, int(nsuper))
+	ylocs_left = np.linspace(0., yend-supery, int(nsuper))
 
-	xlocs_right = np.linspace(xlen-xend+superx, xlen-superx, int(nsuper))
-	ylocs_right = np.linspace(ylen-yend+supery, ylen-supery, int(nsuper))
+	#Define sampling locations in areas of higher density at high x and y
+	xlocs_right = np.linspace(xlen-xend+superx, xlen, int(nsuper))
+	ylocs_right = np.linspace(ylen-yend+supery, ylen, int(nsuper))
 
+	#Define sampling locations in the rest of the image
 	xlocs_mid = np.linspace(xend,xlen-xend,int(nreg))
 	ylocs_mid = np.linspace(yend,ylen-yend,int(nreg))
 
-	xx = np.append(xlocs_mid, [xlocs_left, xlocs_right])
-	yy = np.append(ylocs_mid, [ylocs_left,ylocs_right])
+	#Combine all three location arrays into a single array, create a corersponding meshgrid
+	xx = np.append(xlocs_left, np.append(xlocs_mid, xlocs_right))
+	yy = np.append(ylocs_left, np.append(ylocs_mid,ylocs_right))
 	X, Y = np.meshgrid(xx, yy)
 
 	#Setting up a mask with points considered for background estimation
@@ -105,10 +118,24 @@ def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, order=1, plots_on=F
 	hr = int(ribsize/2)
 
 	#Calculating the KDE and consequent mode inside masked ares
-	for idx, (xx, yy) in enumerate(zip(X.ravel(), Y.ravel())):
+	for idx, (xx, yy) in tqdm(enumerate(list(zip(X.ravel(), Y.ravel())))):
 		y = int(yy)
 		x = int(xx)
-		ffi_eval = ffi[y-hr:y+hr+1, x-hr:x+hr+1] #Adding the +1 to make the selection even
+		#Checking for edges and change treatment accordingly
+		xleft = x-hr
+		xright = x+hr+1
+		yleft = y-hr
+		yright = y+hr+1
+		if x == 0:
+			xleft = x
+		if x == xlen:
+			xright = xlen
+		if y == 0:
+			yleft = y
+		if y == ylen:
+			yright = ylen
+
+		ffi_eval = ffi[yleft:yright, xleft:xright] #Adding the +1 to make the selection even
 
 		#Building a KDE on the data
 		kernel = stats.gaussian_kde(ffi_eval.flatten(),bw_method='scott')
@@ -116,39 +143,21 @@ def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, order=1, plots_on=F
 
 		#Calculate the optimal value of the mode from the KDE
 		bkg_field[idx] = alpha[np.argmax(kernel(alpha))]
-		mask[y-hr:y+hr+1, x-hr:x+hr+1] = 1			#Saving the evaluated location in a mask
+		mask[yleft:yright, xleft:xright] = 1			#Saving the evaluated location in a mask
 
 	#Plotting the ffi with measurement locations shown
 	if plots_on:
 		fig, ax = plt.subplots()
 		im = ax.imshow(np.log10(ffi),cmap='Blues_r', origin='lower')
 		fig.colorbar(im,label=r'$log_{10}$(Flux)')
-		ax.set_title(ffi_type)
 		ax.contour(mask, c='r', N=1)
 		plt.show()
 
-	print('Fitting a 2D polynomial using the cPlaneModel')
-	#Preparing the data
-	neighborhood = np.zeros([len(bkg_field),3])
-	neighborhood[:, 0] = X.flatten()
-	neighborhood[:, 1] = Y.flatten()
-	neighborhood[:, 2] = bkg_field
-
-	#Getting the inlier masks with RANSAC to expel outliers
-	inlier_masks, coeffs = fRANSAC(modes, neighborhood, itt_ransac)
-
-	if plots_on:
-		fig = corner.corner(coffs, labels=['m','c'])
-		plt.show()
-		
-	#Setting up the Plane Model Class
-	Model = cPlaneModel(order=order, weights=inlier_masks)
-	Fit = Model.fit(neighborhood)
-	fit_coeffs = Fit.coeff
-
-	#Constructing the model on a grid the size of the full ffi
+	#Interpolating to draw the background
 	Xf, Yf = np.meshgrid(np.arange(xlen), np.arange(ylen))
-	bkg_est = Model.evaluate(Xf, Yf, fit_coeffs)
+
+	points = np.array([X.ravel(),Y.ravel()]).T
+	bkg_est = interpolate.griddata(points, bkg_field, (Xf, Yf), method='cubic')
 
 	return bkg_est
 
@@ -166,10 +175,10 @@ if __name__ == '__main__':
 
 	# Load file:
 	ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
-	ffi_type = ffis[1]
+	ffi_type = ffis[0]
 
-	ffi, bkg = load_files(ffi_type)
-	# ffi, bkg = get_sim()
+	# ffi, bkg = load_files(ffi_type)
+	ffi, bkg = get_sim(style='complex')
 
 	#Get background
 	est_bkg = fit_background(ffi, ribsize, nside, itt_ransac, order, plots_on)
@@ -179,7 +188,6 @@ if __name__ == '__main__':
 	fig, ax = plt.subplots()
 	im = ax.imshow(np.log10(ffi),cmap='Blues_r', origin='lower')
 	fig.colorbar(im,label=r'$log_{10}$(Flux)')
-	ax.set_title(ffi_type)
 
 	fdiff, adiff = plt.subplots()
 	diff = adiff.imshow(np.log10(est_bkg) - np.log10(bkg), origin='lower')

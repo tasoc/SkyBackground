@@ -15,7 +15,6 @@ Includes a '__main__' for independent test runs on local machines.
 
 import matplotlib.pylab as plt
 import scipy
-import pyfits
 import glob
 
 import numpy as np
@@ -74,10 +73,6 @@ def fit_background(ffi, percentile=10, plots_on = False):
         min_vecy = np.zeros(nbin-1)
         y_msky = ffi[i,::]      #All X values for Y = i
         x_msky = ffi[::,i]      #All Y values for X = i
-
-        # for h in range(nbin-1):     #Get the minimum values in each bin
-        #     min_vecx[h] = np.min(x_msky[int_nbin_vec[h]:int_nbin_vec[h+1]])
-        #     min_vecy[h] = np.min(y_msky[int_nbin_vec[h]:int_nbin_vec[h+1]])
 
         for h in range(nbin-1):     #Get the value of the chosen percentile in each bin
             min_vecx[h] = np.nanpercentile(x_msky[int_nbin_vec[h]:int_nbin_vec[h+1]],[percentile])

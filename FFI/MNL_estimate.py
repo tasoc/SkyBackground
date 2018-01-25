@@ -22,6 +22,7 @@ import corner
 
 from scipy import optimize
 from scipy import stats
+from scipy import interpolate
 from statsmodels.nonparametric.kde import KDEUnivariate as KDE
 from sklearn import linear_model
 from pyqt_fit import kde
@@ -266,7 +267,10 @@ def fit_background(ffi, size=128, itt_field=1, itt_ransac=500, order=1, plots_on
 	X = (X+0.5) * pixel_factor		#X and Y are now the pixel centroids of each box
 	Y = (Y+0.5) * pixel_factor
 
-	#Creating a len(ffi)/size by 3 array of box positions and the mode of the box
+	#Fitting a polynomial to the background
+	Xfull, Yfull = np.meshgrid(np.arange(ffi.shape[1]), np.arange(ffi.shape[0]))
+
+	# Creating a len(ffi)/size by 3 array of box positions and the mode of the box
 	neighborhood = np.zeros([len(modes.flatten()),3])
 	neighborhood[:, 0] = X.flatten()
 	neighborhood[:, 1] = Y.flatten()
@@ -285,7 +289,6 @@ def fit_background(ffi, size=128, itt_field=1, itt_ransac=500, order=1, plots_on
 	fit_coeffs = Fit.coeff
 
 	#Construct the models for the sizexsize grid and the full ffi grid
-	Xfull, Yfull = np.meshgrid(np.arange(ffi.shape[1]), np.arange(ffi.shape[0]))
 	M = Model.evaluate(X, Y, fit_coeffs)
 	bkg_est = Model.evaluate(Xfull, Yfull, fit_coeffs)
 

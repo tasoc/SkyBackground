@@ -1,13 +1,6 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 
-#AUTHORS:
-#T'DA3 | Oliver James HALL | 2017
-
-import numpy as np
-from matplotlib import pyplot as plt
-import sys
-
 '''
 A simple code to see how the Buzasi+15 method approximates a synthetic
 background on a synthetic image of a point source with incresing image size.
@@ -20,7 +13,14 @@ pixel of the image, with a standard deviation of 1.5 pixels.
 
 The background level is assumed to be 0.1% of the stellar flux as the location
 of the point source.
+
+.. codeauthor:: Oliver James Hall <ojh251@student.bham.ac.uk>
 '''
+
+import numpy as np
+from matplotlib import pyplot as plt
+import sys
+from scipy import stats
 
 if __name__ == "__main__":
     plt.close('all')
@@ -49,7 +49,13 @@ if __name__ == "__main__":
         d = flux * np.exp( (-(pt[0] - Y)**2 - (pt[1] - X)**2)/sig**2)
         d += bkg_arr   #Adding poissoninan noise to bkg
 
-        bkg_est[idx] = np.median(d[d < np.nanpercentile(d,[20])])
+        '''Estimate background instead using the KDE method'''
+        dd = d[d < np.nanpercentile(d,[75])]
+        kernel = stats.gaussian_kde(dd.flatten(),bw_method='scott')
+        alpha = np.linspace(dd.min(), dd.max(), 10000)
+        bkg_est[idx] = alpha[np.argmax(kernel(alpha))]
+
+        # bkg_est[idx] = np.median(d[d < np.nanpercentile(d,[20])])
 
         if plots_on:
             if idx == 0 or idx == 3:
