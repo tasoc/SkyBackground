@@ -30,10 +30,12 @@ if __name__ == "__main__":
 
     ffi, bkg = get_sim(style='flat')
 
-    print('fitting ML')
-    ML = MLfit_bkg(ffi,order=1)
+    # print('fitting ML')
+    # ML = MLfit_bkg(ffi,order=1)
+    ML = np.ones_like(bkg)*bkg
+
     print('fitting OJH')
-    OJH = OHfit_bkg(ffi,order=1)
+    OJH = OHfit_bkg(ffi,order=3)
     print('fitting RH')
     RH  = RHfit_bkg(ffi)
     print('fitting CvE')
@@ -115,10 +117,10 @@ if __name__ == "__main__":
     stdML = np.std(100*resML/bkg)
 
     print('Median offset & standard deviation on residuals:')
-    print('CvE offset: '+str(np.round(medCvE,3))+r"% $\pm$ "+str(np.round(stdCvE,3))+'%')
-    print('OJH offset: '+str(np.round(medOH,3))+r"% $\pm$ "+str(np.round(stdOH,3))+'%')
-    print('ML offset: '+str(np.round(medML,3))+r"% $\pm$ "+str(np.round(stdML,3))+'%')
-    print('RH offset: '+str(np.round(medRH,3))+r"% $\pm$ "+str(np.round(stdRH,3))+'%')
+    print('CvE offset: '+str(np.round(medCvE,5))+r"% $\pm$ "+str(np.round(stdCvE,5))+'%')
+    print('OJH offset: '+str(np.round(medOH,5))+r"% $\pm$ "+str(np.round(stdOH,5))+'%')
+    print('ML offset: '+str(np.round(medML,5))+r"% $\pm$ "+str(np.round(stdML,5))+'%')
+    print('RH offset: '+str(np.round(medRH,5))+r"% $\pm$ "+str(np.round(stdRH,5))+'%')
     cc, button = close_plots()
     button.on_clicked(close)
 

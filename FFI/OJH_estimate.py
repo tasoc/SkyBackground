@@ -19,6 +19,7 @@ import astropy.io.fits as pyfits
 import sys
 import glob
 import corner
+from tqdm import tqdm
 
 import numpy as np
 from scipy import interpolate
@@ -95,20 +96,20 @@ def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, order=1, plots_on=F
 	yend = perc*xlen
 
 	#Define sampling locations in areas of higher density at low x and y
-	xlocs_left = np.linspace(superx, xend-superx, int(nsuper))
-	ylocs_left = np.linspace(supery, yend-supery, int(nsuper))
+	xlocs_left = np.linspace(0., xend-superx, int(nsuper))
+	ylocs_left = np.linspace(0., yend-supery, int(nsuper))
 
 	#Define sampling locations in areas of higher density at high x and y
-	xlocs_right = np.linspace(xlen-xend+superx, xlen-superx, int(nsuper))
-	ylocs_right = np.linspace(ylen-yend+supery, ylen-supery, int(nsuper))
+	xlocs_right = np.linspace(xlen-xend+superx, xlen, int(nsuper))
+	ylocs_right = np.linspace(ylen-yend+supery, ylen, int(nsuper))
 
 	#Define sampling locations in the rest of the image
 	xlocs_mid = np.linspace(xend,xlen-xend,int(nreg))
 	ylocs_mid = np.linspace(yend,ylen-yend,int(nreg))
 
 	#Combine all three location arrays into a single array, create a corersponding meshgrid
-	xx = np.append(xlocs_mid, [xlocs_left, xlocs_right])
-	yy = np.append(ylocs_mid, [ylocs_left,ylocs_right])
+	xx = np.append(xlocs_left, np.append(xlocs_mid, xlocs_right))
+	yy = np.append(ylocs_left, np.append(ylocs_mid,ylocs_right))
 	X, Y = np.meshgrid(xx, yy)
 
 	#Setting up a mask with points considered for background estimation
@@ -117,10 +118,24 @@ def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, order=1, plots_on=F
 	hr = int(ribsize/2)
 
 	#Calculating the KDE and consequent mode inside masked ares
-	for idx, (xx, yy) in enumerate(zip(X.ravel(), Y.ravel())):
+	for idx, (xx, yy) in tqdm(enumerate(zip(X.ravel(), Y.ravel()))):
 		y = int(yy)
 		x = int(xx)
-		ffi_eval = ffi[y-hr:y+hr+1, x-hr:x+hr+1] #Adding the +1 to make the selection even
+		#Checking for edges and change treatment accordingly
+		xleft = x-hr
+		xright = x+hr+1
+		yleft = y-hr
+		yright = y+hr+1
+		if x == 0:
+			xleft = x
+		if x == xlen:
+			xright = xlen
+		if y == 0:
+			yleft = y
+		if y == ylen:
+			yright = ylen
+
+		ffi_eval = ffi[yleft:yright, xleft:xright] #Adding the +1 to make the selection even
 
 		#Building a KDE on the data
 		kernel = stats.gaussian_kde(ffi_eval.flatten(),bw_method='scott')
@@ -128,7 +143,7 @@ def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, order=1, plots_on=F
 
 		#Calculate the optimal value of the mode from the KDE
 		bkg_field[idx] = alpha[np.argmax(kernel(alpha))]
-		mask[y-hr:y+hr+1, x-hr:x+hr+1] = 1			#Saving the evaluated location in a mask
+		mask[yleft:yright, xleft:xright] = 1			#Saving the evaluated location in a mask
 
 	#Plotting the ffi with measurement locations shown
 	if plots_on:
@@ -138,28 +153,34 @@ def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, order=1, plots_on=F
 		ax.contour(mask, c='r', N=1)
 		plt.show()
 
-	#Fitting a 2D polynomial using the cPlaneModel class
-	#Preparing the data
-	neighborhood = np.zeros([len(bkg_field),3])
-	neighborhood[:, 0] = X.flatten()
-	neighborhood[:, 1] = Y.flatten()
-	neighborhood[:, 2] = bkg_field
-
-	#Getting the inlier masks with RANSAC to use as weights for fitting
-	inlier_masks, coeffs = fRANSAC(bkg_field, neighborhood, itt_ransac)
-
-	if plots_on:
-		fig = corner.corner(coeffs, labels=['m','c'])
-		plt.show()
-
-	#Setting up the Plane Model Class
-	Model = cPlaneModel(order=order, weights=inlier_masks)
-	Fit = Model.fit(neighborhood)
-	fit_coeffs = Fit.coeff
-
-	#Constructing the model on a grid the size of the full ffi
+	#Interpolating to draw the background
 	Xf, Yf = np.meshgrid(np.arange(xlen), np.arange(ylen))
-	bkg_est = Model.evaluate(Xf, Yf, fit_coeffs)
+
+	points = np.array([X.ravel(),Y.ravel()]).T
+	bkg_est = interpolate.griddata(points, bkg_field, (Xf, Yf), method='cubic')
+
+	# #Fitting a 2D polynomial using the cPlaneModel class
+	# #Preparing the data
+	# neighborhood = np.zeros([len(bkg_field),3])
+	# neighborhood[:, 0] = X.flatten()
+	# neighborhood[:, 1] = Y.flatten()
+	# neighborhood[:, 2] = bkg_field
+    #
+	# #Getting the inlier masks with RANSAC to use as weights for fitting
+	# inlier_masks, coeffs = fRANSAC(bkg_field, neighborhood, itt_ransac)
+    #
+	# if plots_on:
+	# 	fig = corner.corner(coeffs, labels=['m','c'])
+	# 	plt.show()
+    #
+	# #Setting up the Plane Model Class
+	# Model = cPlaneModel(order=order, weights=inlier_masks)
+	# Fit = Model.fit(neighborhood)
+	# fit_coeffs = Fit.coeff
+    #
+	# #Constructing the model on a grid the size of the full ffi
+	# Xf, Yf = np.meshgrid(np.arange(xlen), np.arange(ylen))
+	# bkg_est = Model.evaluate(Xf, Yf, fit_coeffs)
 
 	return bkg_est
 
@@ -180,7 +201,7 @@ if __name__ == '__main__':
 	ffi_type = ffis[0]
 
 	# ffi, bkg = load_files(ffi_type)
-	ffi, bkg = get_sim(style='flat')
+	ffi, bkg = get_sim(style='complex')
 
 	#Get background
 	est_bkg = fit_background(ffi, ribsize, nside, itt_ransac, order, plots_on)

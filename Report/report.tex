@@ -132,12 +132,12 @@ To test the background estimators we first applied them to the most simple case:
 \label{fig:flatgauss}
 \end{figure}
 
-The resulting distribution of estimated background points can be seen in Figure \ref{fig:histogram_flatgauss}. The residuals on the estimated background can be seen for every 2048th data point in Figure \ref{fig:residual_flatgauss}.
+The resulting distribution of estimated background points can be seen in Figure \ref{fig:histogram_flatgauss}. The residuals on the estimated background can be seen for every 562 data point in Figure \ref{fig:residual_flatgauss}.
 
 \begin{figure}[h!]
 \centering
 \includegraphics[width=0.49\textheight]{residual_flatgauss}
-\caption{Every 2048th residual for the four different background estimators applied to a white noise background. The y-axis is residuals as a percentage of the background level. Note that only the residuals in one direction are shown, as it takes every 2048th data point}
+\caption{Every 562nd residual for the four different background estimators applied to a white noise background. The y-axis is residuals as a percentage of the background level. Note that only the residuals in one direction are shown, as it takes every 562nd data point}
 \label{fig:residual_flatgauss}
 \end{figure}
 
@@ -221,11 +221,40 @@ The individual components, as well as the combined background and the simulated 
    \label{fig:complexbkg}
 \end{figure}
 
+The resulting distribution of estimated background points can be seen in Figure \ref{fig:histogram_complex}. The residuals on the estimated background can be seen for every 562nd data point in Figure \ref{fig:residual_complex}.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.49\textheight]{residual_complex}
+\caption{Every 562nd residual for the four different background estimators applied to a complex background. The y-axis is residuals as a percentage of the background level. Note that only the residuals in one direction are shown, as it takes every 562nd data point}
+\label{fig:residual_complex}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.49\textheight]{histogram_complex}
+\caption{Histograms of the residuals for the four different background estimators applied to a white noise background.}
+\label{fig:histogram_complex}
+\end{figure}
 
 \subsection{CvE}
+Thsi method works best out of the four, with the median residual being within one standard deviation of 0. No changes to this method have been made on this iteration. The use of a percentile of 50 has been maintained.
+
 \subsection{ML}
 \subsection{OJH}
 \subsection{RH}
+This method works very well, with the median residual being within one standard deviation of 0. No changes to this method have been made on this iteration.
+
+\subsection{Conclusions}
+
+\begin{figure}[!ht]
+   \centering
+   \subfloat[][]{\includegraphics[width=.4\textwidth]{CvE_complex}}\quad
+   \subfloat[][]{\includegraphics[width=.4\textwidth]{OH_complex}}\\
+   \subfloat[][]{\includegraphics[width=.4\textwidth]{RH_complex}}\quad
+   \subfloat[][]{\includegraphics[width=.4\textwidth]{ML_complex}}
+   \caption{Residuals on background fits to a complex background.}
+\end{figure}
 
 \section{Test 3: The above + Stars}
 \subsection{CvE}

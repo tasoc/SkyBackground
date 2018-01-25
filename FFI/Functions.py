@@ -105,9 +105,8 @@ def get_sim(style='flat'):
     if style == 'complex':
         #If the background has already been generated on this local repository, read in
         if os.path.isfile('../Tests/complex_sim.fits'):
-            print('hello')
-            sim = pyfits.open('complex_sim.fits')[0].data
-            bkg = pyfits.open('complex_sim_bkg.fits')[0].data
+            sim = pyfits.open('../Tests/complex_sim.fits')[0].data
+            bkg = pyfits.open('../Tests/complex_sim_bkg.fits')[0].data
 
         else:
             a = -1.05    #Slope on spiffy bkg
