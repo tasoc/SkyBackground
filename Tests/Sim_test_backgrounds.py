@@ -86,7 +86,7 @@ if __name__ == "__main__":
     ares[3].axhline(0.,c='r')
     fres.tight_layout()
 
-    fhist, ahist = plt.subplots(2,2, sharex=True)
+    fhist, ahist = plt.subplots(2,2, sharex=False)
     ahist[0,0].hist((CvE-bkg).ravel(),histtype='step',bins=int(np.sqrt(len(bkg.ravel()))))
     ahist[1,0].hist((OJH-bkg).ravel(),histtype='step',bins=int(np.sqrt(len(bkg.ravel()))))
     ahist[0,1].hist((RH-bkg).ravel(),histtype='step',bins=int(np.sqrt(len(bkg.ravel()))))

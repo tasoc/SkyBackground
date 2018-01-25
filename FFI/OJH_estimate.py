@@ -118,7 +118,7 @@ def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, order=1, plots_on=F
 	hr = int(ribsize/2)
 
 	#Calculating the KDE and consequent mode inside masked ares
-	for idx, (xx, yy) in tqdm(enumerate(zip(X.ravel(), Y.ravel()))):
+	for idx, (xx, yy) in tqdm(enumerate(list(zip(X.ravel(), Y.ravel())))):
 		y = int(yy)
 		x = int(xx)
 		#Checking for edges and change treatment accordingly
