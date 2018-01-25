@@ -243,11 +243,9 @@ The resulting distribution of estimated background points can be seen in Figure 
 Thsi method works best out of the four, with the median residual being within one standard deviation of 0. No changes to this method have been made on this iteration. The use of a percentile of 50 has been maintained.
 
 \subsection{ML}
-Initial tests were not able to fit to the data properly using a polynomial fit. Replacing the polynomial with a griddata interpolation function works significantly better, recovering the large scale structure across the image.\\
-Changes made during this test:
-\begin{itemize}
-\item Stopped using a polynomial fit to the data, instead started using \texttt{scipy.interpolate.griddata}.
-\end{itemize}
+This method struggles at this stage, as the polynomial fit can not accurately capture the large scale structure of the background. Replacing the polynomial with a griddata interpolation is not viable at this stage, as the method cannot sample data at the edges of the image. \\
+
+If this method is to be applied after launch, more intense work is required.
 
 \subsection{OJH}
 Initial tests were not able to fit to the data properly using a polynomial fit. Replacing the polynomial with a griddata interpolation function works significantly better, recovering the large scale structure across the image.\\
@@ -262,12 +260,25 @@ Changes made during this test:
 This method works very well, with the median residual being within one standard deviation of 0. No changes to this method have been made on this iteration.
 
 \subsection{Conclusions}
-Following the changes to the OJH method, three out of four methods converge around median residuals within one standard deviation of 0. The ML method is the bottleneck in the testing at the moment, and takes significantly longer than other estimates, despite no clear improvement in performance over the others. As it still relies on the polynomial fitting, it falls significantly behind the others in its ability to match large scale structure.\\
+Following the changes to the OJH method, three out of four methods converge around median residuals within one standard deviation of 0. 
+
+The ML method is the bottleneck in the testing at the moment, and takes significantly longer than other estimates, despite no clear improvement in performance over the others. As it still relies on the polynomial fitting, it falls significantly behind the others in its ability to match large scale structure. If it is to be used after launch, more careful work is required for its improvement. Considering the other methods present however, this most likely won't be necessary.\\
 
 All four backgrounds will progress to the next stage of testing.
 
-
-
+\begin{table}[h!]
+\begin{center}
+	\begin{tabular}{c|c|c}
+	\hline
+	\textbf{Method}	& \textbf{Median of residuals }	& \textbf{Standard Deviation}\\ \hline\hline
+	CvE 			& 0.0385$\%$ 				& 0.7909$\%$ \\
+	OJH 			& 0.1157$\%$ 				& 0.9799$\%$\\
+	ML 			& -0.0098$\%$ 				& 6.1322$\%$\\
+	RH 			& 0.1182$\%$ 				& 0.6297$\%$\\
+	\hline
+	\end{tabular}
+\end{center}	
+\end{table}
 
 \begin{figure}[!ht]
    \centering

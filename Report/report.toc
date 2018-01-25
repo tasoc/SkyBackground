@@ -15,9 +15,9 @@
 \contentsline {subsection}{\numberline {3.3}OJH}{10}
 \contentsline {subsection}{\numberline {3.4}RH}{10}
 \contentsline {subsection}{\numberline {3.5}Conclusions}{10}
-\contentsline {section}{\numberline {4}Test 3: The above + Stars}{11}
-\contentsline {subsection}{\numberline {4.1}CvE}{11}
-\contentsline {subsection}{\numberline {4.2}ML}{11}
-\contentsline {subsection}{\numberline {4.3}OJH}{11}
-\contentsline {subsection}{\numberline {4.4}RH}{11}
-\contentsline {section}{\numberline {5}Conclusions}{11}
+\contentsline {section}{\numberline {4}Test 3: The above + Stars}{12}
+\contentsline {subsection}{\numberline {4.1}CvE}{12}
+\contentsline {subsection}{\numberline {4.2}ML}{12}
+\contentsline {subsection}{\numberline {4.3}OJH}{12}
+\contentsline {subsection}{\numberline {4.4}RH}{12}
+\contentsline {section}{\numberline {5}Conclusions}{12}
