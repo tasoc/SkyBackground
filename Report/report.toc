@@ -9,15 +9,15 @@
 \contentsline {subsection}{\numberline {2.3}OJH}{6}
 \contentsline {subsection}{\numberline {2.4}RH}{7}
 \contentsline {subsection}{\numberline {2.5}Conclusions}{7}
-\contentsline {section}{\numberline {3}Test 2: Noise Background + slope and crowding}{7}
+\contentsline {section}{\numberline {3}Test 2: Noise Background + slope and crowding}{8}
 \contentsline {subsection}{\numberline {3.1}CvE}{8}
-\contentsline {subsection}{\numberline {3.2}ML}{8}
-\contentsline {subsection}{\numberline {3.3}OJH}{8}
-\contentsline {subsection}{\numberline {3.4}RH}{8}
-\contentsline {subsection}{\numberline {3.5}Conclusions}{9}
-\contentsline {section}{\numberline {4}Test 3: The above + Stars}{9}
-\contentsline {subsection}{\numberline {4.1}CvE}{9}
-\contentsline {subsection}{\numberline {4.2}ML}{9}
-\contentsline {subsection}{\numberline {4.3}OJH}{9}
-\contentsline {subsection}{\numberline {4.4}RH}{9}
-\contentsline {section}{\numberline {5}Conclusions}{9}
+\contentsline {subsection}{\numberline {3.2}ML}{9}
+\contentsline {subsection}{\numberline {3.3}OJH}{10}
+\contentsline {subsection}{\numberline {3.4}RH}{10}
+\contentsline {subsection}{\numberline {3.5}Conclusions}{10}
+\contentsline {section}{\numberline {4}Test 3: The above + Stars}{11}
+\contentsline {subsection}{\numberline {4.1}CvE}{11}
+\contentsline {subsection}{\numberline {4.2}ML}{11}
+\contentsline {subsection}{\numberline {4.3}OJH}{11}
+\contentsline {subsection}{\numberline {4.4}RH}{11}
+\contentsline {section}{\numberline {5}Conclusions}{11}

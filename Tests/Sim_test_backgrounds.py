@@ -28,12 +28,10 @@ from Functions import *
 if __name__ == "__main__":
     plt.close('all')
 
-    ffi, bkg = get_sim(style='flat')
+    ffi, bkg = get_sim(style='complex')
 
-    # print('fitting ML')
-    # ML = MLfit_bkg(ffi,order=1)
-    ML = np.ones_like(bkg)*bkg
-
+    print('fitting ML')
+    ML = MLfit_bkg(ffi,order=3)
     print('fitting OJH')
     OJH = OHfit_bkg(ffi,order=3)
     print('fitting RH')

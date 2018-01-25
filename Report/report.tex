@@ -24,19 +24,18 @@
 
 \usepackage{verbatim}
 
-\title{backgrounds_report}
-\author{Oliver Hall}
-\date{January 2018}
+\title{Report on background estimation methods for TESS FFIs}
+\author{Oliver J. Hall}
+\date{\today}
 
 \newcommand{\HRule}{\rule{\linewidth}{0.3mm}} 
 
 
 \begin{document}
 
-\titlepage
-
+\maketitle
 \tableofcontents
-\pagebreak
+\clearpage
 
 \section{Introduction}
 This quick report breaks down the individual background estimators for TESS Full Frame Image s(FFI) on the TASOC/SkyBackgrounds repository and gives a visual guide to how they fare against increasingly complex backgrounds.
@@ -194,6 +193,9 @@ In conclusion, all four methods are able to recover a distribution of residuals 
    \caption{Residuals on background fits to a flat gaussian noise background.}
 \end{figure}
 
+\clearpage
+
+
 \section{Test 2: Noise Background + slope and crowding}
 The next stage of background estimator testing involves a more compliated background function. The background now consists of three components:
 
@@ -205,7 +207,7 @@ The next stage of background estimator testing involves a more compliated backgr
 
 The individual components, as well as the combined background and the simulated (star-less) FFI, can be seen in Figures \ref{fig:bkgcomponents} and \ref{fig:complexbkg}.
 
-\begin{figure}
+\begin{figure}[h!]
 \centering
 \includegraphics[width=\textwidth]{bkgcomponents}
 \caption{The various components used in the new complex background.}
@@ -213,7 +215,7 @@ The individual components, as well as the combined background and the simulated 
 \end{figure}
 
 
-\begin{figure}[!ht]
+\begin{figure}[h!]
    \centering
    \subfloat[][]{\includegraphics[width=.4\textwidth]{complexffi}}\quad
    \subfloat[][]{\includegraphics[width=.4\textwidth]{complexbkg}}\\
@@ -241,11 +243,31 @@ The resulting distribution of estimated background points can be seen in Figure 
 Thsi method works best out of the four, with the median residual being within one standard deviation of 0. No changes to this method have been made on this iteration. The use of a percentile of 50 has been maintained.
 
 \subsection{ML}
+Initial tests were not able to fit to the data properly using a polynomial fit. Replacing the polynomial with a griddata interpolation function works significantly better, recovering the large scale structure across the image.\\
+Changes made during this test:
+\begin{itemize}
+\item Stopped using a polynomial fit to the data, instead started using \texttt{scipy.interpolate.griddata}.
+\end{itemize}
+
 \subsection{OJH}
+Initial tests were not able to fit to the data properly using a polynomial fit. Replacing the polynomial with a griddata interpolation function works significantly better, recovering the large scale structure across the image.\\
+
+Changes made during this test:
+\begin{itemize}
+\item Stopped using a polynomial fit to the data, instead started using \texttt{scipy.interpolate.griddata}.
+\item Added extra measurment boxes of half size along the edges of the FFI for interpolation purposes.
+\end{itemize}
+
 \subsection{RH}
 This method works very well, with the median residual being within one standard deviation of 0. No changes to this method have been made on this iteration.
 
 \subsection{Conclusions}
+Following the changes to OJH and ML methods, all four methods converge around median residuals within one standard deviation of 0. The ML method is the bottleneck in the testing at the moment, and takes significantly longer than other estimates, despite no clear improvement in performance over the others.\\
+
+All four backgrounds will progress to the next stage of testing.
+
+
+
 
 \begin{figure}[!ht]
    \centering
@@ -256,6 +278,8 @@ This method works very well, with the median residual being within one standard 
    \caption{Residuals on background fits to a complex background.}
 \end{figure}
 
+
+\clearpage
 \section{Test 3: The above + Stars}
 \subsection{CvE}
 \subsection{ML}

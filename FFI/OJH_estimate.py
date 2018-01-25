@@ -159,29 +159,6 @@ def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, order=1, plots_on=F
 	points = np.array([X.ravel(),Y.ravel()]).T
 	bkg_est = interpolate.griddata(points, bkg_field, (Xf, Yf), method='cubic')
 
-	# #Fitting a 2D polynomial using the cPlaneModel class
-	# #Preparing the data
-	# neighborhood = np.zeros([len(bkg_field),3])
-	# neighborhood[:, 0] = X.flatten()
-	# neighborhood[:, 1] = Y.flatten()
-	# neighborhood[:, 2] = bkg_field
-    #
-	# #Getting the inlier masks with RANSAC to use as weights for fitting
-	# inlier_masks, coeffs = fRANSAC(bkg_field, neighborhood, itt_ransac)
-    #
-	# if plots_on:
-	# 	fig = corner.corner(coeffs, labels=['m','c'])
-	# 	plt.show()
-    #
-	# #Setting up the Plane Model Class
-	# Model = cPlaneModel(order=order, weights=inlier_masks)
-	# Fit = Model.fit(neighborhood)
-	# fit_coeffs = Fit.coeff
-    #
-	# #Constructing the model on a grid the size of the full ffi
-	# Xf, Yf = np.meshgrid(np.arange(xlen), np.arange(ylen))
-	# bkg_est = Model.evaluate(Xf, Yf, fit_coeffs)
-
 	return bkg_est
 
 
