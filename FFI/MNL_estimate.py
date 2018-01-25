@@ -267,7 +267,7 @@ def fit_background(ffi, size=128, itt_field=1, itt_ransac=500, order=1, plots_on
 	Y = (Y+0.5) * pixel_factor
 
 	#Interpolating to draw the background
-	# Xfull, Yfull = np.meshgrid(np.arange(ffi.shape[1]), np.arange(ffi.shape[0]))
+	Xfull, Yfull = np.meshgrid(np.arange(ffi.shape[1]), np.arange(ffi.shape[0]))
 	# points = np.array([X.ravel(),Y.ravel()]).T
 	# bkg_est = interpolate.griddata(points, modes.flatten(), (Xfull, Yfull), method='cubic')
 
