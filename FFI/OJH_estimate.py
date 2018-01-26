@@ -30,18 +30,16 @@ from MNL_estimate import fRANSAC
 from Functions import *
 
 
-def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, order=1, plots_on=False):
+def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, plots_on=False):
 	"""
 	Estimate the background of a Full Frame Image (FFI).
 	This method employs basic principles from two previous works:
 	-	It uses the Kepler background estimation approach by measuring the
 	background in evenly spaced squares around the image.
-	-	It employs the same background estimation as Buzasi et al. 2015, by taking
-	the median of the lowest 20% of the selected square.
-
-	The background values across the FFI are then fit to with a 2D polynomial
-	using the cPlaneModels class from the MNL_estimate code.
-
+	-	It employs a similar estimation method to Lund et al. 2015, by taking the
+	mode of the background pixels using a KDE.
+	The background values across the FFI are then interpolated over using a scipy
+	griddata interpolation.
 
 	Parameters:
 		ffi (ndarray): A single TESS Full Frame Image in the form of a 2D array.
@@ -55,8 +53,6 @@ def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, order=1, plots_on=F
 		itt_ransac (int): Default 500. The number of RANSAC fits to make to the
 			calculated modes across the full FFI.
 
-		order (int): Default: 1. The desired order of the polynomial to be fit
-			to the estimated background points.
 
 		plots_on (bool): Default False. A boolean parameter. When True, it will show
 			a plot indicating the location of the background squares across the image.
@@ -171,7 +167,6 @@ if __name__ == '__main__':
 	npts = nside**2
 	ribsize = 8
 	itt_ransac = 500
-	order = 1
 
 	# Load file:
 	ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
@@ -181,7 +176,7 @@ if __name__ == '__main__':
 	ffi, bkg = get_sim(style='complex')
 
 	#Get background
-	est_bkg = fit_background(ffi, ribsize, nside, itt_ransac, order, plots_on)
+	est_bkg = fit_background(ffi, ribsize, nside, itt_ransac, plots_on)
 
 	'''Plotting: all'''
 	print('The plots are up!')
