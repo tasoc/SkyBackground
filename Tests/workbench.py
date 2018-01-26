@@ -36,14 +36,15 @@ if __name__ == '__main__':
         stars += get_gaussian(X, Y, heights[s], (locx[s], locy[s]), (ws[s],ws[s]))
 
     fig, ax = plt.subplots()
-    ax.imshow(stars, origin='lower',cmap='Blues_r')
+    semisim = np.random.normal(starraw+bkg,2000,shape)
+    ax.imshow(np.log10(semisim), origin='lower',cmap='Blues_r')
 
     f2, ax2 = plt.subplots()
     ax2.imshow(np.log10(ffi), origin='lower',cmap='Blues_r')
 
-    sim = np.random.normal(stars+bkg, 2000, shape)
+    sim = np.random.normal(stars*10+bkg, 2000, shape)
     f3, a3 = plt.subplots()
-    a3.imshow(sim, origin='lower', cmap='Blues_r')
+    a3.imshow(np.log10(sim), origin='lower', cmap='Blues_r')
 
 
     cp.show()
