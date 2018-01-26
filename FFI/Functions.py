@@ -86,12 +86,12 @@ def get_sim(style='flat'):
     '''
     A function that creates a simple testing backround.
 
-    Note: The 'complex' background has a random element to it. If you re-run the
-    code generation __do__not__commit__the__new__file!
+    Note: The 'complex' background (also used in 'ffi') has a random element to it.
+    If you re-run the code generation __do__not__commit__the__new__file!
 
     Parameters:
         style (str): Default 'flat'. Either 'flat' for a flat gaussian noise background,
-            'complex' for a background that includes slopes and crowding, and 'full'
+            'complex' for a background that includes slopes and crowding, and 'ffi'
             for a full FFI simulation.
 
     Returns:
@@ -101,6 +101,47 @@ def get_sim(style='flat'):
     '''
     shape = (2048,2048)
     X, Y = np.meshgrid(np.arange(shape[1]),np.arange(shape[0]))
+
+    if style == 'ffi':
+        z = 90000    #Median height of spiffy background
+        sigma = 2000 #Sigma is std on spiffy bkg (2% spread)
+
+        #Read in the complex background
+        try: os.path.isfile('../Tests/complex_sim_bkg.fits'):
+            bkg = pyfits.open('../Tests/complex_sim_bkg.fits')[0].data
+        except:
+            print('Please run the complex background first.')
+            return None
+
+        #If the background has already been generated on this local repository, read in
+        if os.path.isfile('../Tests/ffi_sim.fits'):
+            stars = pyfits.open('../Tests/ffi_sim.fits')[0].data
+
+
+        else:
+            nstars = 5000 #Number of stars in teh ffi image
+            stars = np.zeros(X.shape)
+            locx = np.random.rand(nstars) * (shape[1]-1)    #Get locations of stars
+            locy = np.random.rand(nstars) * (shape[0]-1)
+            heights = np.random.exponential(size=nstars)    #Get heights of the stars
+            ws = np.random.rand(nstars) * 2     #Getting random Gaussian spreads
+
+            #Upscale the heights so the medians of this distribution and the
+            #distribution of the FFI SpiFFY image match.
+            ffimed =  5058                      #The median of the ffi data
+            ffiheights = np.median(heights)     #The median of the randomly generated heights
+            heights *= (ffimed/ffiheights)      #Scaling the heights to something ffi-like
+
+            for s in tqdm(range(nstars)):
+                stars += get_gaussian(X, Y, heights[s], (locx[s], locy[s]), (ws[s],ws[s]))
+
+            #Saving out the generated stars
+            hdustars = pyfits.PrimaryHDU(stars)
+            hdustars.writeto('ffi_sim.fits')
+
+        #Constructing the background from the saved or generated components
+        sim = np.random.normal(stars+bkg, sigma, shape)
+        return sim, bkg
 
     if style == 'complex':
         #If the background has already been generated on this local repository, read in

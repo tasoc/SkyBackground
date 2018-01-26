@@ -5,12 +5,50 @@ import sys
 from tqdm import tqdm
 sys.path.append('../FFI/')
 from Functions import *
+import ClosePlots as cp
 
 def get_gaussian(X, Y, A, (mux, muy), (sigma_x, sigma_y)):
     return  A   * np.exp(-0.5 * (mux - X)**2 / sigma_x**2) \
                 * np.exp(-0.5 * (muy- Y)**2 / sigma_y**2)
 
 if __name__ == '__main__':
+    shape = (2048,2048)
+    X, Y = np.meshgrid(np.arange(shape[1]),np.arange(shape[0]))
+
+    ffi, bkg = load_files('ffi_north')
+
+    starraw = ffi - bkg
+
+    if os.path.isfile('complex_sim_bkg.fits'):
+        bkg = pyfits.open('../Tests/complex_sim_bkg.fits')[0].data
+
+    nstars = 5000
+    stars  = np.zeros(ffi.shape)
+    locx = np.random.rand(nstars) * (shape[1]-1)
+    locy = np.random.rand(nstars) * (shape[0]-1)
+    heights = np.random.exponential(size=nstars)
+    ffimed =  5058  #The median of the ffi data
+    ffiheights = np.median(heights)
+    heights *= (ffimed/ffiheights)  #Scaling the heights to something ffi-like
+    ws = np.random.rand(nstars) * 2
+
+    for s in tqdm(range(nstars)):
+        stars += get_gaussian(X, Y, heights[s], (locx[s], locy[s]), (ws[s],ws[s]))
+
+    fig, ax = plt.subplots()
+    ax.imshow(stars, origin='lower',cmap='Blues_r')
+
+    f2, ax2 = plt.subplots()
+    ax2.imshow(np.log10(ffi), origin='lower',cmap='Blues_r')
+
+    sim = np.random.normal(stars+bkg, 2000, shape)
+    f3, a3 = plt.subplots()
+    a3.imshow(sim, origin='lower', cmap='Blues_r')
+
+
+    cp.show()
+
+    sys.exit()
 
     shape = (2048,2048)
     xx = np.arange(shape[1])
