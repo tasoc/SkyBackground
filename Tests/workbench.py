@@ -22,18 +22,18 @@ if __name__ == '__main__':
     if os.path.isfile('complex_sim_bkg.fits'):
         bkg = pyfits.open('../Tests/complex_sim_bkg.fits')[0].data
 
-    nstars = 5000
-    stars  = np.zeros(ffi.shape)
-    locx = np.random.rand(nstars) * (shape[1]-1)
-    locy = np.random.rand(nstars) * (shape[0]-1)
-    heights = np.random.exponential(size=nstars)
-    ffimed =  5058  #The median of the ffi data
-    ffiheights = np.median(heights)
-    heights *= (ffimed/ffiheights)  #Scaling the heights to something ffi-like
-    ws = np.random.rand(nstars) * 2
-
-    for s in tqdm(range(nstars)):
-        stars += get_gaussian(X, Y, heights[s], (locx[s], locy[s]), (ws[s],ws[s]))
+    # nstars = 5000
+    # stars  = np.zeros(ffi.shape)
+    # locx = np.random.rand(nstars) * (shape[1]-1)
+    # locy = np.random.rand(nstars) * (shape[0]-1)
+    # heights = np.random.exponential(size=nstars)
+    # ffimed =  5058  #The median of the ffi data
+    # ffiheights = np.median(heights)
+    # heights *= (ffimed/ffiheights)  #Scaling the heights to something ffi-like
+    # ws = np.random.rand(nstars) * 2
+    #
+    # for s in tqdm(range(nstars)):
+    #     stars += get_gaussian(X, Y, heights[s], (locx[s], locy[s]), (ws[s],ws[s]))
 
     fig, ax = plt.subplots()
     semisim = np.random.normal(starraw+bkg,2000,shape)

@@ -28,11 +28,12 @@ from Functions import *
 if __name__ == "__main__":
     plt.close('all')
 
-    # ffi, bkg = get_sim(style='ffi')
-    ffi, bkg = load_files('ffi_north')
+    ffi, bkg = get_sim(style='ffi')
+    # ffi, bkg = load_files('ffi_north')
 
     print('fitting ML')
-    ML = MLfit_bkg(ffi,order=3)
+    # ML = MLfit_bkg(ffi,order=3)
+    ML = np.copy(bkg)
     print('fitting OJH')
     OJH = OHfit_bkg(ffi)
     print('fitting RH')
