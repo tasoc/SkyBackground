@@ -32,14 +32,14 @@ if __name__ == "__main__":
     # ffi, bkg = load_files('ffi_north')
 
     print('fitting ML')
-    # ML = MLfit_bkg(ffi,order=3)
+    # ML,_ = MLfit_bkg(ffi,order=3)
     ML = np.copy(bkg)
     print('fitting OJH')
-    OJH = OHfit_bkg(ffi)
+    OJH,_ = OHfit_bkg(ffi)
     print('fitting RH')
-    RH  = RHfit_bkg(ffi)
+    RH,_  = RHfit_bkg(ffi)
     print('fitting CvE')
-    CvE = CEfit_bkg(ffi, percentile=50)
+    CvE,_ = CEfit_bkg(ffi, percentile=50)
 
     resML = ML-bkg
     resOJH = OJH-bkg

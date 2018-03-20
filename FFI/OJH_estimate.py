@@ -113,7 +113,7 @@ def fit_background(ffi, ribsize=8, nside=25, plots_on=False):
 	hr = int(ribsize/2)
 
 	#Calculating the KDE and consequent mode inside masked ares
-	for idx, (xx, yy) in tqdm(enumerate(list(zip(X.ravel(), Y.ravel())))):
+	for idx, (xx, yy) in enumerate(list(zip(X.ravel(), Y.ravel()))):
 		y = int(yy)
 		x = int(xx)
 		#Checking for edges and change treatment accordingly
@@ -181,17 +181,17 @@ if __name__ == '__main__':
 	plots_on = True
 	nside = 25
 	npts = nside**2
-	ribsize = 8
+	ribsize = 10
 
 	# Load file:
 	ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
 	ffi_type = ffis[1]
 
-	# ffi, bkg = load_files(ffi_type)
-	ffi, bkg = get_sim(style='ffi')
+	ffi, bkg = load_files(ffi_type)
+	# ffi, bkg = get_sim(style='ffi')
 
 	#Get background
-	est_bkg, mask = fit_background(ffi, ribsize, nside, plots_on)
+	est_bkg, mask = fit_background(ffi, ribsize, nside, plots_on=True)
 
 	'''Plotting: all'''
 	print('The plots are up!')
