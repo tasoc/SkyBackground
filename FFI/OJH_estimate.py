@@ -152,8 +152,8 @@ def fit_background(ffi, ribsize=8, nside=25, plots_on=False):
 		plt.show()
 
 	#Lets perform a 99.7th percentile clip
-	lo, hi = np.percentile(bkg_field, [0.3, 99.7])
-	inlier = ((bkg_field > lo) & (bkg_field < hi)).reshape(X.shape)
+	hi = np.percentile(bkg_field, [68])
+	inlier = ((bkg_field < hi)).reshape(X.shape)
 	# locs = np.where(outlier.reshape(X.shape) == True)
 	Xk = X[inlier]
 	Yk = Y[inlier]
@@ -181,14 +181,14 @@ if __name__ == '__main__':
 	plots_on = True
 	nside = 25
 	npts = nside**2
-	ribsize = 10
+	ribsize = 8
 
 	# Load file:
 	ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
 	ffi_type = ffis[1]
 
-	ffi, bkg = load_files(ffi_type)
-	# ffi, bkg = get_sim(style='ffi')
+	# ffi, bkg = load_files(ffi_type)
+	ffi, bkg = get_sim(style='ffi')
 
 	#Get background
 	est_bkg, mask = fit_background(ffi, ribsize, nside, plots_on=True)

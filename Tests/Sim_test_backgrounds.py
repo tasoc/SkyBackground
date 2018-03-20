@@ -32,8 +32,7 @@ if __name__ == "__main__":
     # ffi, bkg = load_files('ffi_north')
 
     print('fitting ML')
-    # ML,_ = MLfit_bkg(ffi,order=3)
-    ML = np.copy(bkg)
+    ML,_ = MLfit_bkg(ffi,order=3)
     print('fitting OJH')
     OJH,_ = OHfit_bkg(ffi)
     print('fitting RH')
