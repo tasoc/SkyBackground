@@ -29,7 +29,7 @@ from MNL_estimate import fRANSAC
 from Functions import *
 
 
-def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, plots_on=False):
+def fit_background(ffi, ribsize=8, nside=25, plots_on=False):
 	"""
 	Estimate the background of a Full Frame Image (FFI).
 	This method employs basic principles from two previous works:
@@ -165,8 +165,9 @@ def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, plots_on=False):
 	points = np.array([Xk.ravel(),Yk.ravel()]).T
 	bkg_est = interpolate.griddata(points, bkg_cut, (Xf, Yf), method='cubic')
 
-	plt.imshow(bkg_est)
-	plt.show()
+	#Kill any remaining nans
+	bkg_est[np.isnan(bkg_est)] = np.nanmedian(bkg_est)
+
 	#Set mask to boolean
 	mask = mask==1
 
@@ -186,8 +187,8 @@ if __name__ == '__main__':
 	ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
 	ffi_type = ffis[1]
 
-	ffi, bkg = load_files(ffi_type)
-	# ffi, bkg = get_sim(style='complex')
+	# ffi, bkg = load_files(ffi_type)
+	ffi, bkg = get_sim(style='ffi')
 
 	#Get background
 	est_bkg, mask = fit_background(ffi, ribsize, nside, plots_on)
