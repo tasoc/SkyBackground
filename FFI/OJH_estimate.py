@@ -7,12 +7,10 @@ Function fo restimation of sky background in TESS Full Frame Images
 Includes a '__main__' for independent test runs on local machines.
 
 .. versionadded:: 1.0.0
-.. versionchanged:: 1.2
+.. versionchanged:: 1.3
 
 .. codeauthor:: Oliver James Hall <ojh251@student.bham.ac.uk>
 """
-#TODO: Include a unity test
-
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
 import astropy.io.fits as pyfits
@@ -24,6 +22,7 @@ from tqdm import tqdm
 import numpy as np
 from scipy import interpolate
 from scipy import stats
+from fatiando import gridder
 
 from MNL_estimate import cPlaneModel
 from MNL_estimate import fRANSAC
@@ -38,7 +37,8 @@ def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, plots_on=False):
 	background in evenly spaced squares around the image.
 	-	It employs a similar estimation method to Lund et al. 2015, by taking the
 	mode of the background pixels using a KDE.
-	The background values across the FFI are then interpolated over using a scipy
+	- 	A 99.7th percentile cut is applied to the mode values before interpolation
+	-	The background values across the FFI are then interpolated over using a scipy
 	griddata interpolation.
 
 	Parameters:
@@ -50,15 +50,14 @@ def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, plots_on=False):
 		nside (int): Default: 100. The number of points a side to evaluate the
 			background for, not consider additional points for corners and edges.
 
-		itt_ransac (int): Default 500. The number of RANSAC fits to make to the
-			calculated modes across the full FFI.
-
-
 		plots_on (bool): Default False. A boolean parameter. When True, it will show
 			a plot indicating the location of the background squares across the image.
 
 	Returns:
 		ndarray: Estimated background with the same size as the input image.
+
+        ndarray: Boolean array specifying which pixels was used to estimate the
+            background (``True`` if pixel was used).
 
 	.. codeauthor:: Oliver James Hall <ojh251@student.bham.ac.uk>
 	"""
@@ -118,6 +117,7 @@ def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, plots_on=False):
 		y = int(yy)
 		x = int(xx)
 		#Checking for edges and change treatment accordingly
+		#Adding the +1 to make the selection even
 		xleft = x-hr
 		xright = x+hr+1
 		yleft = y-hr
@@ -131,7 +131,8 @@ def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, plots_on=False):
 		if y == ylen:
 			yright = ylen
 
-		ffi_eval = ffi[yleft:yright, xleft:xright] #Adding the +1 to make the selection even
+		#Find the region to be evaluated
+		ffi_eval = ffi[yleft:yright, xleft:xright]
 
 		#Building a KDE on the data
 		kernel = stats.gaussian_kde(ffi_eval.flatten(),bw_method='scott')
@@ -146,16 +147,30 @@ def fit_background(ffi, ribsize=8, nside=10, itt_ransac=500, plots_on=False):
 		fig, ax = plt.subplots()
 		im = ax.imshow(np.log10(ffi),cmap='Blues_r', origin='lower')
 		fig.colorbar(im,label=r'$log_{10}$(Flux)')
+		ax.set_title('ffi south')
 		ax.contour(mask, c='r', N=1)
 		plt.show()
+
+	#Lets perform a 99.7th percentile clip
+	lo, hi = np.percentile(bkg_field, [0.3, 99.7])
+	inlier = ((bkg_field > lo) & (bkg_field < hi)).reshape(X.shape)
+	# locs = np.where(outlier.reshape(X.shape) == True)
+	Xk = X[inlier]
+	Yk = Y[inlier]
+	bkg_cut = bkg_field[inlier.flatten()]
 
 	#Interpolating to draw the background
 	Xf, Yf = np.meshgrid(np.arange(xlen), np.arange(ylen))
 
-	points = np.array([X.ravel(),Y.ravel()]).T
-	bkg_est = interpolate.griddata(points, bkg_field, (Xf, Yf), method='cubic')
+	points = np.array([Xk.ravel(),Yk.ravel()]).T
+	bkg_est = interpolate.griddata(points, bkg_cut, (Xf, Yf), method='cubic')
 
-	return bkg_est
+	plt.imshow(bkg_est)
+	plt.show()
+	#Set mask to boolean
+	mask = mask==1
+
+	return bkg_est, mask
 
 
 if __name__ == '__main__':
@@ -166,17 +181,16 @@ if __name__ == '__main__':
 	nside = 25
 	npts = nside**2
 	ribsize = 8
-	itt_ransac = 500
 
 	# Load file:
 	ffis = ['ffi_north', 'ffi_south', 'ffi_cluster']
-	ffi_type = ffis[0]
+	ffi_type = ffis[1]
 
-	# ffi, bkg = load_files(ffi_type)
-	ffi, bkg = get_sim(style='complex')
+	ffi, bkg = load_files(ffi_type)
+	# ffi, bkg = get_sim(style='complex')
 
 	#Get background
-	est_bkg = fit_background(ffi, ribsize, nside, itt_ransac, plots_on)
+	est_bkg, mask = fit_background(ffi, ribsize, nside, plots_on)
 
 	'''Plotting: all'''
 	print('The plots are up!')

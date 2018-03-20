@@ -7,7 +7,7 @@ Function for estimation of sky background in TESS Full Frame Images.
 Includes a '__main__' for independent test runs on local machines.
 
 .. versionadded:: 1.0.0
-.. versionchanged:: 1.1
+.. versionchanged:: 1.2
 
 Notes: Copied over from TASOC/photometry/backgrounds.py [15/01/18]
 
@@ -27,25 +27,31 @@ from astropy.stats import SigmaClip
 
 from Functions import *
 
-def fit_background(ffi):
+def fit_background(ffi, flux_cutoff=3e5):
     """
     Estimate the background of a Full Frame Image (FFI) using the photutils package.
     This method uses the photoutils Background 2D background estimation using a
     SExtracktorBackground estimator, a 3-sigma clip to the data, and a masking
-    of all pixels above 3e5 in flux.
+    of all pixels above 'flux_cutoff' in flux. The result is smoothed using a
+    circular median filter with a diameter of 15 pixels.
 
     Parameters:
         ffi (ndarray): A single TESS Full Frame Image in the form of a 2D array.
+        flux_cutoff (float): Default 3e5. Flux value at which any pixel above will
+            be masked out of the background estimation.
 
     Returns:
         ndarray: Estimated background with the same size as the input image.
+        ndarray: Boolean array specifying which pixels was used to estimate the
+            background (``True`` if pixel was used).
 
     .. codeauthor:: Rasmus Handberg <rasmush@phys.au.dk>
     .. codeauthor:: Oliver James Hall <ojh251@student.bham.ac.uk>
     """
 
+    #Create pixel mask
     mask = ~np.isfinite(ffi)
-    mask |= (ffi > 3e5)
+    mask |= (ffi > flux_cutoff)
 
     # Estimate the background:
     sigma_clip = SigmaClip(sigma=3.0, iters=5) #Sigma clip the data
@@ -62,7 +68,7 @@ def fit_background(ffi):
     #Smoothing the background using a percentile filter
     bkg_est = circular_filter(bkg_est_unfilt, diam=15, percentile=50)
 
-    return bkg_est
+    return bkg_est, mask
 
 
 if __name__ == '__main__':
@@ -76,7 +82,7 @@ if __name__ == '__main__':
     ffi, bkg = get_sim()
 
     #Run background estimation
-    est_bkg = fit_background(ffi)
+    est_bkg, _ = fit_background(ffi)
 
     #Plot background difference
     '''Plotting: all'''

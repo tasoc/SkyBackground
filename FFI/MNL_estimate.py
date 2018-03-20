@@ -7,7 +7,7 @@ Function for estimation of sky background in TESS Full Frame Images
 Includes a '__main__' for independent test runs on local machines.
 
 .. versionadded:: 1.0.0
-.. versionchanged:: 1.1
+.. versionchanged:: 1.2
 
 .. codeauthor:: Mikkel Nørup Lund <mikkelnl@phys.au.dk>
 .. codeauthor:: Oliver James Hall <ojh251@student.bham.ac.uk>
@@ -219,6 +219,10 @@ def fit_background(ffi, size=128, itt_field=1, itt_ransac=500, order=1, plots_on
 	Returns:
 	    ndarray: Estimated background with the same size as the input image.
 
+        ndarray: Boolean array specifying which pixels was used to estimate the
+            background (``True`` if pixel was used).
+
+
 	.. codeauthor:: Mikkel Nørup Lund <mikkelnl@phys.au.dk>
 	.. codeauthor:: Oliver James Hall <ojh251@student.bham.ac.uk>
 	"""
@@ -227,6 +231,9 @@ def fit_background(ffi, size=128, itt_field=1, itt_ransac=500, order=1, plots_on
 	block_ffi = (ffi.reshape(ffi.shape[0]//size, size, -1, size)
 	            .swapaxes(1,2)
 	            .reshape(-1, size, size))
+
+	#Create the initial mask
+	mask = np.zeros(ffi.shape)
 
 	#Creating the storage for the mode positions in each block
 	modes = np.zeros([ffi.shape[0]/size, ffi.shape[1]/size])
@@ -262,6 +269,9 @@ def fit_background(ffi, size=128, itt_field=1, itt_ransac=500, order=1, plots_on
 			modes[j, jj] = alpha[np.argmax(kernel(alpha))]
 			i += 1 #Adding to the index to call the next block
 
+			#Add the inlier masks to the mask array
+			mask[j*size:(j+1)*size,jj*size:(jj+1)*size] = inlier_masks_arr
+
 	X, Y = np.meshgrid(np.arange(modes.shape[1]), np.arange(modes.shape[0]))
 	pixel_factor = (size-1)			#The pixel position of the first box
 	X = (X+0.5) * pixel_factor		#X and Y are now the pixel centroids of each box
@@ -283,6 +293,9 @@ def fit_background(ffi, size=128, itt_field=1, itt_ransac=500, order=1, plots_on
 		fig = corner.corner(coeffs, labels=['m','c'])
 		plt.show()
 
+		plt.imshow(np.log10(ffi),cmap='Blues')
+		plt.contour(mask, N=1,c='r')
+
 	#Calling a Plane Model class
 	Model = cPlaneModel(order=order, weights=inlier_masks)
 	Fit = Model.fit(neighborhood)	#Fitting the data with the model
@@ -292,7 +305,10 @@ def fit_background(ffi, size=128, itt_field=1, itt_ransac=500, order=1, plots_on
 	M = Model.evaluate(X, Y, fit_coeffs)
 	bkg_est = Model.evaluate(Xfull, Yfull, fit_coeffs)
 
-	return bkg_est
+	#Turn mask into boolean
+	mask = mask==1
+
+	return bkg_est, mask
 
 
 if __name__ == '__main__':

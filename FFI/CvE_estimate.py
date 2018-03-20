@@ -7,7 +7,7 @@ Function fo restimation of sky background in TESS Full Frame Images
 Includes a '__main__' for independent test runs on local machines.
 
 .. versionadded:: 1.0.0
-.. versionchanged:: 1.0.2
+.. versionchanged:: 1.2
 
 .. codeauthor:: Carolina Von Essen <cessen@phys.au.dk>
 .. codeauthor:: Oliver James Hall <ojh251@student.bham.ac.uk>
@@ -42,6 +42,8 @@ def fit_background(ffi, percentile=10, plots_on = False):
 
     Returns:
         ndarray: Estimated background with the same size as the input image.
+        ndarray: Boolean array specifying which pixels was used to estimate the
+            background (``True`` if pixel was used).
 
     .. codeauthor:: Carolina Von Essen <cessen@phys.au.dk>
     .. codeauthor:: Oliver James Hall <ojh251@student.bham.ac.uk>
@@ -112,7 +114,11 @@ def fit_background(ffi, percentile=10, plots_on = False):
     # Taking the average between the two images
     bkg_est = (ffi_smooth_yy + ffi_smooth_xx)/2.
 
-    return bkg_est
+    # This method uses the percentile in bins across the entire image.
+    # Therefore, it effectively uses all pixels in the image
+    mask = np.ones(ffi.shape,dtype=bool)
+
+    return bkg_est, mask
 
 if __name__ == '__main__':
     # Set up parameters
@@ -127,7 +133,7 @@ if __name__ == '__main__':
     # ffi, bkg = get_sim()
 
     # Run background estimation
-    est_bkg = fit_background(ffi, percentile, plots_on)
+    est_bkg, _ = fit_background(ffi, percentile, plots_on)
 
     # Plot background difference
     fig, ax = plt.subplots()
